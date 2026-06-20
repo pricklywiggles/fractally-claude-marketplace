@@ -14,7 +14,7 @@ Read `config.source` and expand the trigger's selection into concrete work-units
 - **`tracker`**: list/get issues via the tracker adapter (`config.source.tracker`: type + project/team/idPrefix, or a custom resolver skill). A status ("all todo"), a range ("fra-111-120"), or an explicit list. Each work-unit carries `id`, `title`, `desc`, `branch` (the tracker's branch name, which carries the auto-close link), `url`.
 - **`working-tree` / `branch` / `pr` / `describe`**: build a single work-unit from local state or a description.
 
-Read each item's full intent. If any is ambiguous in a way that changes the implementation, batch the open questions into one `AskUserQuestion` now. All interactivity is front-loaded here and at the Phase 3 checkpoint. (The sources resolver is a separate piece; until it lands, resolve inline per `config.source.type`.)
+Read each item's full intent. If any is ambiguous in a way that changes the implementation, batch the open questions into one `AskUserQuestion` now. All interactivity is front-loaded here and at the Phase 3 checkpoint. See `references/sources.md` for the source dispatch, the built-in tracker adapters (`github-issues`, `linear`), the local sources (working-tree / branch / pr / describe), and the custom-tracker extension point.
 
 ## Phase 2: Scope and group into lanes
 
@@ -69,4 +69,5 @@ Print a table: work-unit, PR link, lane, what changed, review items applied/skip
 
 ## Bundled files
 
+- `references/sources.md` - how Phase 1 resolves the trigger into work-units: source dispatch, the built-in tracker adapters, and the custom-tracker extension point. Read before Phase 1.
 - `references/workflow.md` - the lane-grouping algorithm and the Workflow script template to adapt. Read before Phase 5.

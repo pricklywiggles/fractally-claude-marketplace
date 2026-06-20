@@ -84,7 +84,7 @@ Reviewer.run(workUnit) -> Finding[]
 Finding { severity, file, location?, issue, recommendation }
 ```
 
-Default reviewer: `pr-review-toolkit`. More than one is allowed (e.g. `pr-review-toolkit:review-pr` + `react-best-practices`). `init` detects installed reviewers, offers to install the default if missing or lets the user pick another, and accepts several. Zero reviewers = review is a no-op with a note.
+Default reviewer: `pr-review-toolkit`. More than one is allowed (e.g. `pr-review-toolkit:review-pr` + `vercel-react-best-practices`). `init` detects installed reviewers, offers to install the default if missing or lets the user pick another, and accepts several. Zero reviewers = review is a no-op with a note.
 
 ## Doc jobs (write docs, parallel fan-out)
 

@@ -54,10 +54,12 @@
         "install": "pr-review-toolkit@claude-plugins-official"
       },
       {
-        "name": "react-perf",
+        "name": "vercel-react-best-practices",
         "kind": "skill",
-        "ref": "react-best-practices",
-        "scope": "diff-with-base"
+        "ref": "vercel-react-best-practices",
+        "scope": "diff-with-base",
+        // Vercel Engineering's React/Next.js best-practices ruleset (40+ rules, 8 categories); applies all its rules to the diff, not just perf.
+        "install": "npx skills add vercel-labs/agent-skills"
       }
     ],
     "applyWarranted": true   // batch applies warranted items; standalone reports

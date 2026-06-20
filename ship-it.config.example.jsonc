@@ -1,0 +1,91 @@
+// Example ship-it.config for Sanum (the worked example behind CONTRACTS.md).
+// init produces one of these per project. JSON or JSONC; comments are for the
+// example only. A project drops this at its root (or .claude/ship-it.config.json).
+{
+  "repo": {
+    "mainBranch": "main",
+    // Sanum squash-merges; the orchestrator accounts for squash stranding stacked children.
+    "mergeStrategy": "squash"
+    // slug auto-detected via `gh repo view`
+  },
+
+  "source": {
+    "default": "tracker",
+    "tracker": {
+      "type": "linear",          // built-in linear adapter (via the Linear MCP)
+      "project": "Sanum",
+      "team": "Fractally",
+      "idPrefix": "FRA-"
+    }
+  },
+
+  // Injected into every worker prompt. @AGENTS.md = read the repo's AGENTS.md verbatim.
+  "houseRules": "@AGENTS.md",
+
+  "safety": [
+    "Code-only verification: never start a dev server (the human does visual/clinical QA).",
+    "Never read personal health data: no screenshots of readings, no SQL value probes.",
+    "No em dashes; no AI attribution in commits or PRs.",
+    "This is NOT the Next.js you know: read node_modules/next/dist/docs/ before touching a Next API."
+  ],
+
+  // Run inside the worktree after a change. {changedFiles} is substituted.
+  "verify": [
+    "node_modules/.bin/biome check {changedFiles}",
+    "node_modules/.bin/tsc --noEmit"
+  ],
+
+  "worktree": {
+    "enabled": true,
+    "root": ".claude/worktrees",
+    // make a worktree runnable (real offline install + Tauri sidecar resources)
+    "prepare": "${CLAUDE_PLUGIN_ROOT}/scripts/prepare-worktree-deps.sh {wt} {main}"
+  },
+
+  "concurrency": { "maxLanes": 8 },
+
+  // Parallel reviewer fan-out over each diff (read-only). Default + extras.
+  "review": {
+    "reviewers": [
+      {
+        "name": "pr-review",
+        "kind": "agent",
+        "ref": "pr-review-toolkit:code-reviewer",
+        "install": "pr-review-toolkit@claude-plugins-official"
+      },
+      {
+        "name": "react-perf",
+        "kind": "skill",
+        "ref": "react-best-practices",
+        "scope": "diff-with-base"
+      }
+    ],
+    "applyWarranted": true   // batch applies warranted items; standalone reports
+  },
+
+  "ci": { "watch": true, "fixAttempts": 2 },
+
+  // Parallel doc-job fan-out. Each owns a different file, so they run together.
+  "docs": {
+    "enabled": true,
+    "jobs": [
+      { "name": "openspec",     "mechanic": "author-reconcile", "ref": "openspec-propose", "target": "openspec/",     "appliesWhen": "capability" },
+      { "name": "design",       "mechanic": "curate-serial",    "ref": "impeccable",       "target": "DESIGN.md",     "appliesWhen": "design" },
+      // ARCHITECTURE.md keeper (the parked follow-up): generated curate-serial job, classify per-issue, write once.
+      { "name": "architecture", "mechanic": "curate-serial",    "ref": "ship-it:doc-architecture", "target": "ARCHITECTURE.md", "appliesWhen": "architecture" },
+      { "name": "graphify",     "mechanic": "regenerate",       "ref": "graphify update .", "target": "graphify-out/" }
+    ]
+  },
+
+  "prTemplate": {
+    "sections": ["Summary", "Linear", "Verification"],
+    "verification": "two-part: (1) automated checks run with results; (2) a GitHub checkbox list of concrete visual/clinical QA steps with exact commands/queries. Never 'left to the reviewer'. No personal health values in the PR."
+  },
+
+  "release": {
+    "versionSource": "package.json",
+    "tagFormat": "v{version}",
+    "notesStyle": "user-facing",
+    "watchBuild": "release.yml"
+  }
+}

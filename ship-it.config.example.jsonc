@@ -4,8 +4,10 @@
 {
   "repo": {
     "mainBranch": "main",
-    // Sanum squash-merges; the orchestrator accounts for squash stranding stacked children.
-    "mergeStrategy": "squash"
+    // merge is the stacking-friendly choice: it preserves the base branch's commits so
+    // stacked PRs retarget cleanly, whereas squash rewrites them and strands the child.
+    // Set this to how the repo actually merges.
+    "mergeStrategy": "merge"
     // slug auto-detected via `gh repo view`
   },
 

@@ -28,7 +28,7 @@ Unless a skip-confirmation token is in the trigger, show the plan and wait: the 
 
 ## Phase 4: Pre-create lane-head worktrees
 
-If `config.worktree.enabled`, create each lane head's worktree under `config.worktree.root`, **sequentially** (concurrent `git worktree add` races the index lock), and make each runnable with `config.worktree.prepare`. Stacked children are created lazily by their own `fix-one-issue` step off the parent branch, after the parent commits. (The worktree-lifecycle helper is bundled later; until then the orchestrator runs `git worktree add` + `config.worktree.prepare` inline.)
+If `config.worktree.enabled`, create each lane head's worktree under `config.worktree.root`, **sequentially** (concurrent `git worktree add` races the index lock), and make each runnable with `config.worktree.prepare`. Stacked children are created lazily by their own `fix-one-issue` step off the parent branch, after the parent commits. Use `${CLAUDE_PLUGIN_ROOT}/scripts/setup-worktrees.sh --root <config.worktree.root> --prepare "<config.worktree.prepare>"`, feeding one `<id>|<branch>|<base>` line per lane head on stdin.
 
 ## Phase 5: Run the batch
 
@@ -56,7 +56,7 @@ If `config.ci.watch`, spawn one **`ship-it:ci-fix`** background watcher per PR. 
 
 ## Phase 8: Summarize
 
-Print a table: work-unit, PR link, lane, what changed, review items applied/skipped, doc outcome, blockers. Point the user at the post-merge follow-ups (the doc reconcile/archive, worktree cleanup), which are merged-gated.
+Print a table: work-unit, PR link, lane, what changed, review items applied/skipped, doc outcome, blockers. Point the user at the post-merge follow-ups, both merged-gated: the doc reconcile (Phase 7) and worktree cleanup via `${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-worktrees.sh --all-merged`.
 
 ## Guardrails
 
@@ -74,3 +74,5 @@ Print a table: work-unit, PR link, lane, what changed, review items applied/skip
 - `references/doc-jobs.md` - the three doc-job mechanics, the built-in jobs, and the post-merge reconcile flow. Read before Phase 6.
 - `${CLAUDE_PLUGIN_ROOT}/scripts/openspec-archive.sh` - the openspec author-reconcile reconcile (merged-gated `openspec archive`, batched docs PR).
 - `${CLAUDE_PLUGIN_ROOT}/scripts/watch-merges.sh` - the in-session merge watcher that runs a `--reconcile` command once the PRs merge.
+- `${CLAUDE_PLUGIN_ROOT}/scripts/setup-worktrees.sh` - pre-create lane-head worktrees (stdin `<id>|<branch>|<base>`), running the project prepare per worktree. Read before Phase 4.
+- `${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-worktrees.sh` - merged-gated worktree + branch teardown. Phase 8 / post-merge.

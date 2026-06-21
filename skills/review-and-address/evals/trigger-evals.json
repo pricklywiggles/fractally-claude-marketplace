@@ -1,0 +1,11 @@
+[
+  { "query": "review my changes against main and fix what's warranted", "should_trigger": true },
+  { "query": "run the reviewers on the current diff with main", "should_trigger": true },
+  { "query": "review this branch with all my configured reviewers and apply the good feedback", "should_trigger": true },
+  { "query": "review PR #175 and address the warranted findings", "should_trigger": true },
+
+  { "query": "ship all the todo issues and open a PR for each", "should_trigger": false },
+  { "query": "open a PR for my branch", "should_trigger": false },
+  { "query": "just clean up the comments I added", "should_trigger": false },
+  { "query": "cut a new release", "should_trigger": false }
+]

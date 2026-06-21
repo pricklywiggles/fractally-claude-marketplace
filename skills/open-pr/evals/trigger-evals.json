@@ -1,0 +1,11 @@
+[
+  { "query": "open a PR for my current branch", "should_trigger": true },
+  { "query": "push this branch and open a pull request against main", "should_trigger": true },
+  { "query": "finalize this work-unit: push it and open the PR", "should_trigger": true },
+  { "query": "my branch is done and reviewed, open the pull request with a proper QA checklist", "should_trigger": true },
+
+  { "query": "ship all the todo issues and open a PR for each", "should_trigger": false },
+  { "query": "implement fra-123 and open a PR", "should_trigger": false },
+  { "query": "review my diff with main and fix what matters", "should_trigger": false },
+  { "query": "cut a new release", "should_trigger": false }
+]

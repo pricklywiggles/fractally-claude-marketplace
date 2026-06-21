@@ -1,0 +1,25 @@
+[
+  { "query": "ship all the todo issues and open a PR for each one", "should_trigger": true },
+  { "query": "knock out fra-111 through fra-118 for me, you don't need to check in first, just run the whole thing", "should_trigger": true },
+  { "query": "take fra-131, fra-132 and fra-135, fix each, run the reviewers, and put up separate pull requests", "should_trigger": true },
+  { "query": "work through the rest of the backlog tickets end to end: branch, fix, review, PR", "should_trigger": true },
+  { "query": "batch-fix these issues: #142 #143 #145, and parallelize whatever doesn't conflict", "should_trigger": true },
+  { "query": "clear the Todo column, each issue gets its own branch and PR", "should_trigger": true },
+  { "query": "i've got 6 small tickets queued, implement them all and stack the ones that touch the same files", "should_trigger": true },
+  { "query": "run the multi-issue workflow on fra-150..156", "should_trigger": true },
+  { "query": "grab fra-161 and fra-162, implement both and push PRs, skip the confirmation step", "should_trigger": true },
+  { "query": "batch through todo: a worktree per issue, reviewers on each, then PRs", "should_trigger": true },
+
+  { "query": "open a PR for the changes I just made on this branch", "should_trigger": false },
+  { "query": "push this branch and open a pull request against main", "should_trigger": false },
+  { "query": "review my changes against main and fix what's warranted", "should_trigger": false },
+  { "query": "run the reviewers on the current diff with main", "should_trigger": false },
+  { "query": "implement fra-123 and verify it, don't open a PR yet", "should_trigger": false },
+  { "query": "cut a new release of the app", "should_trigger": false },
+  { "query": "CI is red on my PR, watch it and fix the failures", "should_trigger": false },
+  { "query": "set up ship-it for this repo", "should_trigger": false },
+  { "query": "what are the open todo issues right now? just list them", "should_trigger": false },
+  { "query": "review PR #175 for me and leave comments", "should_trigger": false },
+  { "query": "merge the fra-112 PR and then clean up its worktree", "should_trigger": false },
+  { "query": "help me write an implementation plan for fra-140, it's a big refactor", "should_trigger": false }
+]

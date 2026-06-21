@@ -1,0 +1,11 @@
+{
+  "skill_name": "ship-issues",
+  "note": "Trigger-style prompts for description tuning. The full workflow opens real PRs, so these test triggering and resolution intent only; do NOT run them end to end against a live repo. Ids are shown in both tracker styles (fra-NNN and #NNN) on purpose: the orchestrator is tracker-agnostic and resolves them via config.source.",
+  "evals": [
+    { "id": 1, "prompt": "ship all the todo issues and open a PR for each", "expected_output": "Triggers; resolves every Todo work-unit from config.source and plans lanes.", "files": [] },
+    { "id": 2, "prompt": "knock out fra-111 through fra-120, no need to check with me first", "expected_output": "Triggers; expands the range and runs without the plan checkpoint (skip-confirmation token).", "files": [] },
+    { "id": 3, "prompt": "do #131 and #134, open PRs for each", "expected_output": "Triggers; resolves exactly those two work-units, groups them, ships each to a PR.", "files": [] },
+    { "id": 4, "prompt": "batch these tickets: 142, 143, 145, code only", "expected_output": "Triggers; treats bare numbers as ids via idPrefix; the skip-docs token turns off the doc phase.", "files": [] },
+    { "id": 5, "prompt": "open a PR for my current branch", "expected_output": "Does NOT trigger ship-issues; routes to open-pr (one finished branch, not a batch).", "files": [] }
+  ]
+}

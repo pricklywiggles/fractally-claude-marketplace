@@ -82,7 +82,7 @@ The file must:
 - carry a description that triggers both from the ship-it doc phase and from a manual "update `<doc>` for this change",
 - classify whether a given diff is in scope for the doc, then act by mechanic (curate-serial: edit only the affected sections; regenerate: run the command; author-reconcile: author the per-unit artifact),
 - include a brief project-context section so the skill is grounded in this repo,
-- obey `config.houseRules` in everything it contains, including text the skill prints at runtime: no em dashes, no AI attribution.
+- obey `config.houseRules` in everything it contains, including text the skill prints at runtime: no em dashes (and not `--` as a substitute; use a comma, colon, or rewrite), no AI attribution.
 
 Register it in `docs.jobs` by its bare name (`<name>`). Built-in docs (openspec, graphify, impeccable) need no generation; reference them directly.
 

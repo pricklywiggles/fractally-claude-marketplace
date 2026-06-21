@@ -42,11 +42,11 @@ Source.resolve(selection) -> WorkUnit[]
 ```
 
 Built-in sources:
-- `tracker` — from an issue tracker. Selection is a status ("all todo"), a range ("fra-111-120"), or an explicit list. Carries id, title, desc, branch, url.
-- `working-tree` — the current uncommitted (or committed-but-unpushed) changes as one work-unit. No tracker.
-- `branch` — an existing branch as a work-unit.
-- `pr` — an open PR as a work-unit (carries prNumber, branch).
-- `describe` — an ad-hoc text task; the orchestrator creates the branch.
+- `tracker`: from an issue tracker. Selection is a status ("all todo"), a range ("fra-111-120"), or an explicit list. Carries id, title, desc, branch, url.
+- `working-tree`: the current uncommitted (or committed-but-unpushed) changes as one work-unit. No tracker.
+- `branch`: an existing branch as a work-unit.
+- `pr`: an open PR as a work-unit (carries prNumber, branch).
+- `describe`: an ad-hoc text task; the orchestrator creates the branch.
 
 ### Tracker adapter (the source that varies by project)
 
@@ -91,9 +91,9 @@ Default reviewer: `pr-review-toolkit`. More than one is allowed (e.g. `pr-review
 
 The doc phase runs every configured doc job in parallel (each owns a different file, so it is safe). Every job is one of three mechanics:
 
-- **regenerate-from-code** — re-derive the doc from merged code; no authoring. Examples: graphify (`graphify update .`), typedoc, API docs.
-- **author-and-reconcile** — author a per-work-unit artifact alongside the change, reconcile into canonical docs after merge. Example: OpenSpec (author a change on the issue branch, archive into `specs/` post-merge).
-- **curate-serial** — update a shared prose doc; serialized because the file is shared. Classify per-issue concurrently, write once. Examples: DESIGN.md (via impeccable), ARCHITECTURE.md.
+- **regenerate-from-code**: re-derive the doc from merged code; no authoring. Examples: graphify (`graphify update .`), typedoc, API docs.
+- **author-and-reconcile**: author a per-work-unit artifact alongside the change, reconcile into canonical docs after merge. Example: OpenSpec (author a change on the issue branch, archive into `specs/` post-merge).
+- **curate-serial**: update a shared prose doc; serialized because the file is shared. Classify per-issue concurrently, write once. Examples: DESIGN.md (via impeccable), ARCHITECTURE.md.
 
 ```
 DocJob {
@@ -127,9 +127,9 @@ JSON (JSONC accepted). Most keys optional; detection + defaults fill the rest. S
 | `source.default` | which source the orchestrator uses by default |
 | `source.tracker` | tracker type + project/team/idPrefix (or a custom resolver ref) |
 | `houseRules` | text, or `@FILE` to derive from AGENTS.md/CLAUDE.md; injected into every worker prompt |
-| `safety` | hard rails carried by every worker (e.g. "no personal health data") |
+| `safety` | hard rails carried by every *worker* prompt (e.g. "no personal health data", "code-only verification"); human run/QA notes go in `worktree.qaNotes`, not here |
 | `verify` | command(s) run inside the worktree after a change; `{changedFiles}` placeholder |
-| `worktree.enabled` / `.root` / `.prepare` | worktree on/off, location, and the make-runnable hook (runs in the worktree; `{wt}`/`{main}` substituted) |
+| `worktree.enabled` / `.root` / `.prepare` / `.qaNotes` | worktree on/off, location (default `.claude/worktrees`), the make-runnable hook (runs in the worktree; `{wt}`/`{main}` substituted), and human run/QA caveats surfaced at handoff |
 | `concurrency.maxLanes` | parallel lane cap |
 | `review.reviewers` | the reviewer list (parallel fan-out) |
 | `ci.watch` / `.fixAttempts` | CI watch + bounded auto-fix |

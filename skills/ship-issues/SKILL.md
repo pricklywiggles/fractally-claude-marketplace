@@ -58,7 +58,7 @@ If `config.ci.watch`, spawn one **`ship-it:ci-fix`** background watcher per PR. 
 
 ## Phase 8: Summarize
 
-Print a table: work-unit, PR link, lane, what changed, review items applied/skipped, doc outcome, blockers. Point the user at the post-merge follow-ups, both merged-gated: the doc reconcile (Phase 7) and worktree cleanup via `${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-worktrees.sh --all-merged`.
+Print a table: work-unit, PR link, lane, what changed, review items applied/skipped, doc outcome, blockers. If `config.worktree.enabled`, note that each worktree is left runnable for visual/runtime QA and surface any `config.worktree.qaNotes` (run caveats). Point the user at the post-merge follow-ups, both merged-gated: the doc reconcile (Phase 7) and worktree cleanup via `${CLAUDE_PLUGIN_ROOT}/scripts/cleanup-worktrees.sh --all-merged`.
 
 ## Guardrails
 

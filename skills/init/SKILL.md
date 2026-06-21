@@ -28,7 +28,7 @@ Before touching anything, open with a short welcome that orients a first-time us
 >
 > The **ship-issues** orchestrator runs these across a batch, working out which work-units can run in parallel and which must run sequentially (overlapping work is stacked on dependent branches so the PRs never collide); `init` adapts all of it to your project.
 >
-> **Right now, setup:** I'll (1) **detect** your project by reading the repo (read-only), (2) **ask** only what I cannot infer, explaining each question, (3) **check prerequisites** (tracker access, `gh` auth, doc-tool binaries), (4) **generate** a small doc-job skill for any doc you keep that has no built-in, and (5) **write** `ship-it.config.json`. The only things I create are that config and any generated skills; nothing else changes.
+> **Right now, setup:** I'll (1) **detect** your project by reading the repo (read-only), (2) **ask** only what I cannot infer, explaining each question, (3) **check prerequisites** (tracker access, `gh` auth, doc-tool binaries), (4) **generate** a small doc-job skill for any doc you keep that has no built-in, and (5) **write and validate** `ship-it.config.json`. The only things I create are that config and any generated skills; nothing else changes.
 
 Adapt the wording to the project, keep it skimmable, then proceed to detection.
 
@@ -86,9 +86,21 @@ The file must:
 
 Register it in `docs.jobs` by its bare name (`<name>`). Built-in docs (openspec, graphify, impeccable) need no generation; reference them directly.
 
-## 5. Write ship-it.config
+## 5. Write and validate ship-it.config
 
-Write `ship-it.config.json` at the project root (or `.claude/ship-it.config.json`) as plain JSON conforming to the schema. Keys: `repo` (mainBranch, mergeStrategy, slug), `source` (default + tracker), `houseRules`, `safety`, `verify`, `worktree` (enabled, root, prepare, qaNotes), `concurrency.maxLanes`, `review.reviewers`, `ci` (`watch` is a boolean on/off for the post-PR CI watcher, default true, never a workflow path; `fixAttempts`), `docs.jobs`, `prTemplate`, `release`. Fill detected values; use the interview answers for the rest. Show the user the written config.
+Write `ship-it.config.json` at the project root (or `.claude/ship-it.config.json`) as plain JSON. **Model it exactly on `${CLAUDE_PLUGIN_ROOT}/ship-it.config.example.jsonc`**, the same keys, nesting, and value *shapes*, swapping in this project's detected and interviewed values. Do not invent alternative key names or shapes. The shapes the engine reads (it reads these exact paths):
+- `repo`: `{ mainBranch, mergeStrategy (squash|merge|rebase), slug }`.
+- `source`: `{ default, tracker: {...} }`. `tracker` is an **object** with a `type` (`linear` -> project/team/idPrefix; `github-issues` -> the todo label); tracker fields live **inside** `source.tracker`, never in a sibling key.
+- `verify`: an **array** of command strings (not `{commands:[...]}`); use direct binaries, not package-manager run-scripts, which misbehave in a worktree (`node_modules/.bin/biome check {changedFiles}`, not `pnpm lint`).
+- `safety`: array of worker rails.
+- `worktree`: `{ enabled, root, prepare, qaNotes }`.
+- `review.reviewers`: array of `{ name, kind (agent|skill|command), ref }`; `ref` is the **invocation** name (`pr-review-toolkit:code-reviewer`, `vercel-react-best-practices`).
+- `ci`: `{ watch (boolean on/off, default true; never a workflow path), fixAttempts }`.
+- `docs.jobs`: array of `{ name, mechanic (regenerate|author-reconcile|curate-serial), ref, target, appliesWhen }`; `ref` is the command/skill, `appliesWhen` the docNeed that triggers it (a regenerate job may omit `appliesWhen`).
+- `prTemplate`: `{ sections, verification }`.
+- `release`: `{ enabled, versionSource, tagFormat, notesStyle, watchBuild }`.
+
+**Then validate in a loop.** Run `${CLAUDE_PLUGIN_ROOT}/scripts/validate-config.sh <path>` and fix every error it reports, re-running until it prints `OK`. The validator (schema in `scripts/config.schema.jq`) is the schema of record; the config is not done until it passes. Resolve warnings too, or note why not. Then show the user the final, validated config.
 
 ## 6. Summary
 

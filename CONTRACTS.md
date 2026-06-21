@@ -137,9 +137,11 @@ JSON (JSONC accepted). Most keys optional; detection + defaults fill the rest. S
 | `prTemplate` | PR body shape (Summary / tracker link / two-part Verification) |
 | `release.*` | cut-release: version source, tag format, notes style, build to watch |
 
+The authoritative shape is `scripts/config.schema.jq`; `scripts/validate-config.sh` checks a config against it (used by `init` in an edit-fix loop, and runnable standalone whenever the config is edited).
+
 ## init
 
-Detect-first, ask-second. Detects package manager, verify command, CI system, tracker, doc tools, and installed reviewers from the repo; asks only for what it cannot infer (tracker project/team, safety rails, which doc jobs + reviewers, merge strategy); generates doc-job skills for novel docs via skill-creator; runs a prerequisite + auth check (tracker MCP, gh, doc-tool binaries); writes `ship-it.config`. All interactivity lives here, so the workers stay parallel and non-interactive.
+Detect-first, ask-second. Detects package manager, verify command, CI system, tracker, doc tools, and installed reviewers from the repo; asks only for what it cannot infer (tracker project/team, safety rails, which doc jobs + reviewers, merge strategy); generates doc-job skills for novel docs via skill-creator; runs a prerequisite + auth check (tracker MCP, gh, doc-tool binaries); writes `ship-it.config`, then validates it against the schema (`scripts/config.schema.jq`) via `scripts/validate-config.sh` in an edit-fix loop until it conforms, so init's output always matches the shapes the engine reads. All interactivity lives here, so the workers stay parallel and non-interactive.
 
 ## Plugin packaging notes
 

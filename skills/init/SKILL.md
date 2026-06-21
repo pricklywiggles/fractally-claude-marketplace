@@ -10,13 +10,17 @@ Produce a `ship-it.config` that adapts the generic engine to this project. Detec
 
 The full config schema is in the plugin's `CONTRACTS.md`; the keys are summarized in step 5.
 
-## 0. Explain the plan first
+## 0. Welcome and explain the plan
 
-Before touching anything, tell the user what init will do and in what order, so they know what is coming and that it is safe. Something like:
+Before touching anything, open with a short welcome that orients a first-time user. Cover four things, briefly and skimmably: a **welcome**, **what ship-it does**, **the stages it covers**, and **what is about to happen** in this setup. Something like:
 
-> I'll set up ship-it for this project in five steps: (1) **detect** your setup (package manager, verify command, CI, issue tracker, doc tools, installed reviewers) by reading the repo, this is read-only; (2) **ask** you only what I cannot infer, with the reason for each question; (3) **check prerequisites** (tracker access, `gh` auth, doc-tool binaries); (4) **generate** a small doc-job skill for any doc you keep that has no built-in; (5) **write** `ship-it.config.json`. The only things I create are that config and any generated doc-job skills; nothing else is changed.
+> **Welcome to ship-it.** It takes your work from a tracker issue (or just your current changes) all the way to a merged pull request, and keeps your living docs in step as it goes. It is configurable per project, and every stage is also a standalone skill you can run on its own.
+>
+> **What it covers**, per work-unit: implement the change, clean up comments, run your configured reviewers and apply the warranted feedback, then open a PR. After that, a documentation pass that keeps your living docs current (specs, design system, architecture, generated wikis, whatever you configure), plus post-PR CI watch-and-fix and a merge-then-reconcile for docs. And, optionally, cutting releases. Independent work runs concurrently; overlapping work stacks on dependent branches.
+>
+> **Right now, setup:** I'll (1) **detect** your project by reading the repo (read-only), (2) **ask** only what I cannot infer, explaining each question, (3) **check prerequisites** (tracker access, `gh` auth, doc-tool binaries), (4) **generate** a small doc-job skill for any doc you keep that has no built-in, and (5) **write** `ship-it.config.json`. The only things I create are that config and any generated skills; nothing else changes.
 
-Keep it to a short preview, then proceed to detection.
+Adapt the wording to the project, keep it skimmable, then proceed to detection.
 
 ## 1. Detect (read-only)
 

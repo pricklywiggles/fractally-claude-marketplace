@@ -16,7 +16,17 @@ Before touching anything, open with a short welcome that orients a first-time us
 
 > **Welcome to ship-it.** It takes your work from a tracker issue (or just your current changes) all the way to a merged pull request, and keeps your living docs in step as it goes. It is configurable per project, and every stage is also a standalone skill you can run on its own.
 >
-> **What it covers**, per work-unit: implement the change, clean up comments, run your configured reviewers and apply the warranted feedback, then open a PR. After that, a documentation pass that keeps your living docs current (specs, design system, architecture, generated wikis, whatever you configure), plus post-PR CI watch-and-fix and a merge-then-reconcile for docs. And, optionally, cutting releases. Independent work runs concurrently; overlapping work stacks on dependent branches.
+> **The stages** (the named skills below also run on their own, and `init` configures or swaps each):
+>
+> - **implement** (`fix-one-issue`): make the change in a branch, verify, commit.
+> - **comment cleanup** (`comment-cleanup`): fix the comments the change added.
+> - **review** (`review-and-address`): run your configured reviewers over the diff and apply the warranted feedback.
+> - **open the PR**: the orchestrator finalizes the branch and opens the PR.
+> - **docs**: parallel doc jobs keep your living docs current (specs, design system, architecture, generated wikis, whatever you configure).
+> - **CI** (`ci-fix`): watch the PR's checks and fix failures.
+> - **release** (`cut-release`, optional): propose a version, write notes, tag, publish.
+>
+> The **ship-issues** orchestrator runs these across a batch (independent work in parallel, overlapping work stacked on dependent branches); `init` adapts all of it to your project.
 >
 > **Right now, setup:** I'll (1) **detect** your project by reading the repo (read-only), (2) **ask** only what I cannot infer, explaining each question, (3) **check prerequisites** (tracker access, `gh` auth, doc-tool binaries), (4) **generate** a small doc-job skill for any doc you keep that has no built-in, and (5) **write** `ship-it.config.json`. The only things I create are that config and any generated skills; nothing else changes.
 

@@ -32,6 +32,7 @@ Present what you detected, then batch the open questions into `AskUserQuestion` 
 - **safety rails**: any hard constraints workers must carry (e.g. "no personal data", "code-only verification").
 - **worktrees**: on or off, the root, and the prepare command (a project script when prep is more than a plain install).
 - **concurrency**: max parallel lanes.
+- **releases (optional)**: whether to set up release management at all; if yes, capture the version source, tag format, notes style, and build to watch, and set `release.enabled` true; if no, omit the `release` block.
 
 Keep it short: confirm detections in bulk, ask only what is genuinely unknown.
 

@@ -118,7 +118,7 @@ Built-in jobs: `graphify` (regenerate), `openspec` (author-reconcile), `impeccab
 
 ## ship-it.config keys
 
-JSON (JSONC accepted). Most keys optional; detection + defaults fill the rest. See the example file for concrete Sanum values.
+JSON (JSONC accepted). Lives at `.claude/ship-it/config.json` (with `ship-it.config.json` at the repo root and `.claude/ship-it.config.json` as loader fallbacks). Most keys optional; detection + defaults fill the rest. See the example file for concrete Sanum values.
 
 | Key | Purpose |
 |---|---|

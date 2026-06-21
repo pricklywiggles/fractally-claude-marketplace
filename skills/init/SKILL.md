@@ -88,7 +88,7 @@ Register it in `docs.jobs` by its bare name (`<name>`). Built-in docs (openspec,
 
 ## 5. Write and validate ship-it.config
 
-Write `ship-it.config.json` at the project root (or `.claude/ship-it.config.json`) as plain JSON. **Model it exactly on `${CLAUDE_PLUGIN_ROOT}/ship-it.config.example.jsonc`**, the same keys, nesting, and value *shapes*, swapping in this project's detected and interviewed values. Do not invent alternative key names or shapes. The shapes the engine reads (it reads these exact paths):
+Write the config to **`.claude/ship-it/config.json`** (ship-it's project home, beside the worktree prepare script; the loader also accepts `ship-it.config.json` at the repo root or `.claude/ship-it.config.json`, prefer one of those if the repo gitignores `.claude/`) as plain JSON. **Model it exactly on `${CLAUDE_PLUGIN_ROOT}/ship-it.config.example.jsonc`**, the same keys, nesting, and value *shapes*, swapping in this project's detected and interviewed values. Do not invent alternative key names or shapes. The shapes the engine reads (it reads these exact paths):
 - `repo`: `{ mainBranch, mergeStrategy (squash|merge|rebase), slug }`.
 - `source`: `{ default, tracker: {...} }`. `tracker` is an **object** with a `type` (`linear` -> project/team/idPrefix; `github-issues` -> the todo label); tracker fields live **inside** `source.tracker`, never in a sibling key.
 - `verify`: an **array** of command strings (not `{commands:[...]}`); use direct binaries, not package-manager run-scripts, which misbehave in a worktree (`node_modules/.bin/biome check {changedFiles}`, not `pnpm lint`).

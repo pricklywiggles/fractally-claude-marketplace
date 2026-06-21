@@ -14,7 +14,7 @@ schema="$here/config.schema.jq"
 cfg="${1:-}"
 if [ -z "$cfg" ]; then
   root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-  for c in "$root/ship-it.config.json" "$root/.claude/ship-it.config.json"; do
+  for c in "$root/.claude/ship-it/config.json" "$root/ship-it.config.json" "$root/.claude/ship-it.config.json"; do
     if [ -f "$c" ]; then cfg="$c"; break; fi
   done
 fi

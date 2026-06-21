@@ -8,9 +8,9 @@
 #   echo "$config" | jq -r '.verify[]'
 #   echo "$config" | jq -r '.review.reviewers[].ref'
 #
-# Searched (first wins): ./ship-it.config.json, ./.claude/ship-it.config.json (repo
-# root). With no config file it prints the defaults and warns on stderr, so callers
-# always get usable JSON.
+# Searched (first wins): ./.claude/ship-it/config.json, ./ship-it.config.json,
+# ./.claude/ship-it.config.json. With no config file it prints the defaults and warns
+# on stderr, so callers always get usable JSON.
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -28,7 +28,7 @@ defaults='{
 }'
 
 cfg=""
-for p in "$ROOT/ship-it.config.json" "$ROOT/.claude/ship-it.config.json"; do
+for p in "$ROOT/.claude/ship-it/config.json" "$ROOT/ship-it.config.json" "$ROOT/.claude/ship-it.config.json"; do
   [ -f "$p" ] && { cfg="$p"; break; }
 done
 

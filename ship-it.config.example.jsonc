@@ -1,6 +1,7 @@
 // Example ship-it.config for Sanum (the worked example behind CONTRACTS.md).
 // init produces one of these per project. JSON or JSONC; comments are for the
-// example only. A project drops this at its root (or .claude/ship-it.config.json).
+// example only. init writes it to .claude/ship-it/config.json (repo root or
+// .claude/ship-it.config.json also work as loader fallbacks).
 {
   "repo": {
     "mainBranch": "main",

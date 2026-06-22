@@ -38,7 +38,7 @@ If `config.worktree.enabled`, create each lane head's worktree under `config.wor
 
 ## Phase 5: Run the batch
 
-Adapt the Workflow template in `references/workflow.md` (fill in the resolved lanes and the path to `ship-it.config`), then launch it with the **Workflow** tool. Per work-unit the pipeline chains the stage skills (it never reimplements them):
+Adapt the Workflow template in `references/workflow.md` (fill in the resolved lanes, the path to `ship-it.config`, and `config.concurrency.maxLanes` as the lane-concurrency cap), then launch it with the **Workflow** tool. Per work-unit the pipeline chains the stage skills (it never reimplements them):
 
 1. **`ship-it:fix-one-issue`** (creating the worktree first if a stacked child), implementing against the work-unit's `plan` when present (a stacked child first reconciles its plan with the parent's changes already on its base), then commit. Returns `addedComments` and `docNeed`.
 2. **`ship-it:comment-cleanup`** in apply mode, scoped to the work-unit's commit range, only if `addedComments`. Code-modifying, so sequential within a lane; concurrent across lanes.

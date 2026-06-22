@@ -18,7 +18,7 @@ Common case: every work-unit is in a different area, so every lane has one item 
 
 ## 2. The Workflow script
 
-Adapt the template: pass `args = { main, repo, configPath, lanes }`, where `configPath` points at the project's `ship-it.config` and each work-unit object is `{ id, title, desc, branch, base, prBase, wt, url, focus, plan }` (`focus` is the scoped approach + predicted files from Phase 2; `plan` is the approved plan from the Phase 2 plan pass, present when `config.planning.enabled`). Launch with the **Workflow** tool. Lanes map to `parallel(...)`; within a lane the items are an awaited sequential loop (concurrent-lanes + sequential-within-lane for free).
+Adapt the template: pass `args = { main, repo, configPath, lanes, maxLanes }`, where `configPath` points at the project's `ship-it.config`, `maxLanes` is `config.concurrency.maxLanes` (the cap on how many lanes run at once), and each work-unit object is `{ id, title, desc, branch, base, prBase, wt, url, focus, plan }` (`focus` is the scoped approach + predicted files from Phase 2; `plan` is the approved plan from the Phase 2 plan pass, present when `config.planning.enabled`). Launch with the **Workflow** tool. At most `maxLanes` lanes run concurrently (a worker pool over lanes); within a lane the items run as an awaited sequential loop, so issues stacked in a lane stay sequential.
 
 The per-work-unit pipeline **invokes the ship-it stage skills**; it does not reimplement them. The stage skills read `ship-it.config` themselves, so the agent prompts are thin wrappers that hand over the work-unit and the config path.
 
@@ -29,7 +29,7 @@ export const meta = {
   phases: [{ title: 'Implement' }, { title: 'Comments' }, { title: 'Review' }, { title: 'Finalize' }],
 }
 
-const { main, repo, configPath, lanes } = args
+const { main, repo, configPath, lanes, maxLanes } = args
 
 const IMPL_SCHEMA = {
   type: 'object', additionalProperties: false,
@@ -90,14 +90,22 @@ async function runIssue(issue) {
   return { ...fin, docNeed: impl.docNeed, docRationale: impl.docRationale, addedComments: impl.addedComments, review }
 }
 
-log(`Shipping ${lanes.flat().length} work-unit(s) across ${lanes.length} lane(s)`)
+const laneCap = Math.max(1, maxLanes || 4)
+log(`Shipping ${lanes.flat().length} work-unit(s) across ${lanes.length} lane(s), at most ${laneCap} lane(s) at a time`)
 
-// Lanes run concurrently; items within a lane run sequentially (stacked branches).
-const laneResults = await parallel(
-  lanes.map((lane) => async () => {
-    const results = []
-    for (const issue of lane) results.push(await runIssue(issue))
-    return results
+// Concurrency is capped at the LANE level (config.concurrency.maxLanes), not the issue level:
+// laneCap worker thunks pull whole lanes from a shared queue, so at most laneCap lanes are in
+// flight at once. Within a lane, issues still run sequentially on their stacked branches, and a
+// multi-issue lane occupies one slot for its whole run.
+const laneResults = new Array(lanes.length)
+let nextLane = 0
+await parallel(
+  Array.from({ length: Math.min(laneCap, lanes.length) }, () => async () => {
+    for (let i = nextLane++; i < lanes.length; i = nextLane++) {
+      const results = []
+      for (const issue of lanes[i]) results.push(await runIssue(issue))
+      laneResults[i] = results
+    }
   }),
 )
 
@@ -106,7 +114,7 @@ return { results: laneResults.flat() }
 
 ### Notes
 
-- Pass `args` as a real JSON object to the Workflow tool: `{ main, repo, configPath, lanes }`. Do not stringify it.
+- Pass `args` as a real JSON object to the Workflow tool: `{ main, repo, configPath, lanes, maxLanes }`. Do not stringify it.
 - The per-stage agents invoke the stage skills, which read `ship-it.config` themselves; keep the prompts thin so the skills stay the single source of truth.
 - The Phase 2 plan pass (one `ship-it:plan-one-issue` per work-unit) runs before this Workflow; each work-unit's approved `plan` rides in its object, and `fix-one-issue` implements against it.
 - If a stage skill fails to resolve or returns null, the issue degrades rather than crashing the batch (finalize just has less to act on).

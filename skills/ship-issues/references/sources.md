@@ -45,13 +45,13 @@ A normalized `WorkUnit[]`, passed to Phase 2 (plan and lanes). For tracker sourc
 
 ## Posting plans back (postPlan)
 
-Phase 3 of `ship-issues` posts each approved plan back to its source as a record, when `config.planning.postBack`. This extends the tracker adapter with one idempotent operation:
+`ship-issues` posts each plan back to its source as a **proposal** in Phase 2 (when `config.planning.postBack`), **updates it in place** on every checkpoint revision, and **finalizes it as approved** on approval. One idempotent operation backs all three:
 
 ```
-Tracker.postPlan(workUnit, planText) -> void   // create the plan comment, or update it if already present
+Tracker.postPlan(workUnit, planText, status) -> void   // status: "proposed" | "approved"; create the marked comment, or update it in place
 ```
 
-Idempotency uses a hidden marker line at the top of the comment body, `<!-- ship-it-plan -->`, so re-runs update the same comment instead of stacking duplicates.
+Idempotency uses a hidden marker line at the top of the comment body, `<!-- ship-it-plan -->`, so the first proposal, every feedback revision, and the final approval all update the **same** comment, never a duplicate. The body leads with the marker, then a heading reflecting `status` ("Implementation plan (proposed)" -> "Implementation plan (approved)"), then the plan.
 
 - **`github-issues`**: list with `gh api repos/{owner}/{repo}/issues/{number}/comments`; if a body carries the marker, edit it with `gh api -X PATCH repos/{owner}/{repo}/issues/comments/{id} -f body=...`; otherwise create with `gh issue comment <number> --body <text>`. The body leads with the marker, then the plan.
 - **`linear`**: list the issue's comments (`list_comments`) and look for the marker; `save_comment` updates it by id when found, else creates one. The marker leads the body.

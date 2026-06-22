@@ -116,6 +116,6 @@ return { results: laneResults.flat() }
 
 - Pass `args` as a real JSON object to the Workflow tool: `{ main, repo, configPath, lanes, maxLanes }`. Do not stringify it.
 - The per-stage agents invoke the stage skills, which read `ship-it.config` themselves; keep the prompts thin so the skills stay the single source of truth.
-- The Phase 2 plan pass (one `ship-it:plan-one-issue` per work-unit) runs before this Workflow; each work-unit's approved `plan` rides in its object, and `fix-one-issue` implements against it.
+- The Phase 2 plan pass (one `Plan` agent per work-unit invoking `ship-it:plan-one-issue`) runs before this Workflow; each work-unit's approved `plan` rides in its object, and `fix-one-issue` implements against it.
 - If a stage skill fails to resolve or returns null, the issue degrades rather than crashing the batch (finalize just has less to act on).
 - After the Workflow returns: read the per-work-unit results (including `docNeed`), run Phase 6 (doc-job fan-out), launch Phase 7 watchers, then print the Phase 8 summary. Verify PRs with `gh pr list`.

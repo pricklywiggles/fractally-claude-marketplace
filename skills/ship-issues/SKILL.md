@@ -20,17 +20,23 @@ Read each item's full intent. If any is ambiguous in a way that changes the impl
 
 ## Phase 2: Plan and group into lanes
 
-1. **Plan pass** (parallel, read-only): unless `config.planning.enabled` is false (default true) or a skip-planning token is in the trigger, run one **`ship-it:plan-one-issue`** per work-unit, concurrently (one read-only agent each, the same fan-out shape as a scope pass). Each returns `{ plan, predictedFiles, docNeed, complexity, openQuestions }`: a right-sized plan the implement stage will build against, the files it predicts, a preliminary doc classification, and any open questions. If planning is off, fall back to a thin **scope pass**: one `Explore` subagent per work-unit for predicted files, a one-line approach, and the doc classification. Either way, locate, do not implement.
-2. **Group into lanes** by the overlap-graph algorithm in `references/workflow.md` (connected components of "edit the same file"), using each work-unit's `predictedFiles`. Lanes run concurrently; within a lane, work-units run sequentially on stacked branches.
-3. Branch + base per work-unit: lane head off `config.repo.mainBranch`; a stacked child off its parent branch.
+1. **Plan pass** (parallel, read-only): unless `config.planning.enabled` is false (default true) or a skip-planning token is in the trigger, produce one comprehensive plan per work-unit, concurrently. Spawn each as a **`Plan` agent** (the built-in architect subagent: `subagent_type: 'Plan'`, read-only, high reasoning effort) invoking **`ship-it:plan-one-issue`**, so each plan rivals an interactive plan-mode plan (it reads the real code, weighs alternatives, names reuse, and lays out decisions, edge cases, verification, and risks) at the depth set by `config.planning.depth`. Each returns `{ plan, predictedFiles, docNeed, complexity, openQuestions }`. If planning is off, fall back to a thin **scope pass**: one `Explore` subagent per work-unit for predicted files, a one-line approach, and the doc classification. Either way, read to plan, do not implement.
+2. **Post each plan as a proposal** (if `config.planning.postBack`): post each work-unit's plan back to its source as a **proposed** plan now, so it is reviewable on the tracker and not only in the terminal (idempotent, marker-keyed; see `references/sources.md`). Local sources have no tracker, so the plan stays on screen.
+3. **Group into lanes** by the overlap-graph algorithm in `references/workflow.md` (connected components of "edit the same file"), using each work-unit's `predictedFiles`. Lanes run concurrently; within a lane, work-units run sequentially on stacked branches.
+4. Branch + base per work-unit: lane head off `config.repo.mainBranch`; a stacked child off its parent branch.
 
 Fold any `openQuestions` the plan pass surfaced into the Phase 3 checkpoint, or resolve blocking ones with one `AskUserQuestion` before it.
 
 ## Phase 3: Checkpoint on the plan
 
-Unless a skip-confirmation token is in the trigger, show the plan and wait: the resolved work-units, **each work-unit's plan** (from the plan pass), the lanes (concurrent vs stacked), the predicted files, the predicted doc jobs, and a note that verification is `config.verify` and any `config.safety` rails apply. Apply corrections (a correction to a plan updates that work-unit's `plan`). Under a skip token, print the plan anyway and proceed without pausing.
+Unless a skip-confirmation token is in the trigger, show the plan and wait: the resolved work-units, **each work-unit's plan** (already posted to its tracker issue as a proposal in Phase 2, so you can review it there or in the terminal), the lanes (concurrent vs stacked), the predicted files, the predicted doc jobs, and a note that verification is `config.verify` and any `config.safety` rails apply.
 
-**Post the approved plan back.** Once the checkpoint passes (or immediately, under a skip token), if `config.planning.postBack` and a plan pass ran, post each work-unit's approved plan back to its source via the tracker adapter's `postPlan` (idempotent; see `references/sources.md`). This is a non-blocking record: the checkpoint is the gate, the comment is the paper trail. Local sources (working-tree / branch / pr / describe) have no tracker target, so the plan stays on screen.
+Handle the response:
+- **Feedback**: revise the affected work-unit's `plan`, **update its proposal comment in place** via `postPlan` (same marker, so no duplicate), and re-show the change. Iterate until approved.
+- **Approval**: **finalize** each plan's comment (`postPlan` with status `approved`) and proceed.
+- **Skip-confirmation token**: the plans are already posted as proposals; finalize them and proceed without pausing.
+
+`postPlan` is idempotent and non-blocking: the proposal, every revision, and the final approval all update the same comment; a failed post is reported but never blocks the run. Local sources (working-tree / branch / pr / describe) have no tracker, so the plan stays on screen.
 
 ## Phase 4: Pre-create lane-head worktrees
 

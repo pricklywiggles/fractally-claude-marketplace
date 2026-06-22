@@ -1,12 +1,12 @@
 ---
 name: plan-one-issue
-description: Plan a single work-unit before any code is written: read its intent, predict the files it touches, and produce a right-sized implementation plan (validating and refining any plan already in the ticket, never discarding it). Read-only; emits a plan plus predicted files and a preliminary doc classification. Use for "plan this issue", "draft a plan for FRA-123", "scope and plan this ticket before coding", "what's the approach for this work-unit". The planning stage of the ship-it orchestrator, and usable standalone on an issue or a described task. Not for implementing (use fix-one-issue), batch-shipping many issues (use ship-issues), review (review-and-address), or just listing issues.
+description: Produce a comprehensive, reviewable implementation plan for a single work-unit before any code is written. Reads the real code (not just locates it), weighs the alternatives, names the existing utilities to reuse, and lays out context, approach, the per-file changes, the key decisions, edge cases, verification, and risks, scaled to the work's complexity. Read-only; emits the plan plus predicted files and a preliminary doc classification. Use for "plan this issue", "draft a plan for FRA-123", "scope and plan this ticket before coding", "what's the approach for this work-unit". The planning stage of the ship-it orchestrator, and usable standalone on an issue or a described task. Not for implementing (use fix-one-issue), batch-shipping many issues (use ship-issues), review (review-and-address), or just listing issues.
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
-# plan-one-issue: scope and plan one work-unit (read-only)
+# plan-one-issue: a comprehensive, read-only plan for one work-unit
 
-Take one work-unit's intent and produce a right-sized, reviewable plan the implement stage will build against. Read-only: no edits, no commits, no worktrees. The deliberate planning stage; it runs concurrently (one per work-unit) inside the orchestrator and standalone on its own.
+Produce the plan a careful engineer would write before touching code: grounded in the real codebase, weighing the obvious alternatives, and spelling out the change, the decisions, the edge cases, and how it will be verified. The deliberate planning stage; it runs concurrently (one per work-unit) inside the orchestrator and standalone on its own. Read-only: no edits, no commits, no worktrees.
 
 ## 1. Resolve the work-unit
 
@@ -17,24 +17,36 @@ Take one work-unit's intent and produce a right-sized, reviewable plan the imple
 
 Load the resolved config via `${CLAUDE_PLUGIN_ROOT}/scripts/load-config.sh`; read keys with `jq`:
 - `houseRules` / `safety` (the plan must respect them, e.g. code-only verification, or a "read the framework doc first" rail),
-- `planning.depth` (`adaptive` | `light` | `full`; `adaptive` scales depth to complexity),
+- `verify` (so the plan's verification section names the real checks),
+- `planning.depth` (`light` | `adaptive` | `full`; see step 4),
 - `docs.jobs` (their `name` + `appliesWhen`, to classify `docNeed`).
 
-## 3. Gather signal (read-only)
+## 3. Explore deeply (read-only)
 
-1. Read the work-unit's full intent. If the ticket body already carries a plan, acceptance criteria, or a checklist, treat it as the **seed to validate and refine, never discard it**.
-2. Predict the files. If `graphify-out/` exists, query the graph for the relevant nodes and files (the fastest accurate signal). Otherwise explore read-only (Grep/Glob/Read) to locate the exact code the change touches. Scope every search to the working copy.
-3. Note any unknown that would change the implementation as an `openQuestion`. Do not ask it here; the orchestrator front-loads questions at its checkpoint, and standalone you surface them in the output.
+This is what separates a real plan from a guess. Do not stop at locating files:
+1. **Read the code the change will touch.** Open the relevant files and understand the actual symbols, signatures, types, and surrounding patterns. If `graphify-out/` exists, query the graph to find the right nodes fast, then read them.
+2. **Find what to reuse.** Identify the existing utilities, hooks, types, and conventions the change should build on rather than reinventing, and name them.
+3. **Weigh the obvious alternatives.** When there is more than one reasonable way, compare them briefly and pick one; record the road not taken when the choice is non-obvious.
+4. If the ticket already carries a plan or acceptance criteria, treat it as the **seed to validate and refine against the real code, never discard it**.
+5. **Note unknowns** that would change the implementation as `openQuestions`. Do not ask here; the orchestrator surfaces them at its checkpoint, and standalone you surface them in the output.
 
-## 4. Produce the plan (adaptive depth)
+## 4. Write the plan
 
-Right-size to complexity (`planning.depth` can force it):
-- **Trivial** (a one-line or single-call change): a one-sentence plan and the file(s). No ceremony.
-- **Normal**: the steps in order, the files each touches, the approach, the risks and edge cases, and how it will be verified (`config.verify`).
-- **Thin ticket** (a sentence of intent): author the plan fully from exploration.
-- **Ticket already plans well**: validate it against the real code and refine, flagging anything stale or missing; keep the author's structure.
+Scale the depth to the work and to `config.planning.depth`:
+- **`full`**: always write every section below, even for small work.
+- **`adaptive`** (default): a trivial single-file tweak gets a tight Context + Changes + Verification; anything non-trivial (a new module or subsystem, several files, a new pattern, or a non-obvious decision) gets every section.
+- **`light`**: the files, a one-line approach, and the verification note. Minimal.
 
-A good plan is the smallest correct change spelled out: what to change, where, and why, with the edge cases that matter. Resolve this work-unit only; do not fold in adjacent cleanups.
+The sections of a comprehensive plan:
+- **Context**: the problem and the intended outcome, in the work-unit's terms.
+- **Approach**: the recommended strategy. When the choice is non-obvious, name the alternative you rejected and why.
+- **Changes**: the critical files, each with what changes and which existing utilities or patterns to reuse (named, with paths). This is the spine the implement stage builds against.
+- **Key decisions**: the non-obvious calls and their rationale (which library or API and why, sync vs async, a security or correctness caveat, a data-shape choice).
+- **Edge cases and failure modes**: what breaks it, and how the plan handles each.
+- **Verification**: the concrete `config.verify` checks, plus, for a code-only project, what is left to human QA and any unit test worth adding.
+- **Risks / out of scope**: what could go wrong, and what this work deliberately does not include.
+
+A good plan is the smallest correct change, fully reasoned: what to change, where, why, the decisions that matter, and how you will know it works. Resolve this work-unit only; do not fold in adjacent cleanups.
 
 ## 5. Classify documentation impact (preliminary)
 
@@ -42,13 +54,13 @@ For each `config.docs.jobs`, decide whether the planned change meets its trigger
 
 ## Output
 
-- **Standalone**: print the plan, the predicted files, and the doc classification. Note that under the orchestrator the approved plan is posted back to the source (`config.planning.postBack`); offer to post it if asked.
-- **Called by the orchestrator**: a structured result, `{ issueId, plan, predictedFiles, docNeed: [...], docRationale, complexity, openQuestions: [...] }`. `plan` is the text the implement stage builds against; `complexity` is `trivial` | `normal` | `complex`; `predictedFiles` feeds lane grouping; `openQuestions` feed the checkpoint.
+- **Standalone**: print the plan, the predicted files, and the doc classification. Note that under the orchestrator the plan is posted to the source for review (`config.planning.postBack`); offer to post it if asked.
+- **Called by the orchestrator**: a structured result, `{ issueId, plan, predictedFiles, docNeed: [...], docRationale, complexity, openQuestions: [...] }`. `plan` is the comprehensive markdown the implement stage builds against; `complexity` is exactly one of `trivial` | `normal` | `complex`; `predictedFiles` feeds lane grouping; `openQuestions` feed the checkpoint.
 
 ## Guardrails
 
 - Read-only: never edit, commit, push, or create a worktree. Planning only.
-- Stay generic: graphify is an accelerator when present, never a requirement.
-- Do not over-plan: trivial work gets a trivial plan; match the ticket's own depth when it already plans well.
-- Honor `houseRules` + `safety` in the plan itself (no em dashes, no AI attribution; carry project rails like code-only verification into the verification step).
+- Ground every step in code you actually read; never plan against a guessed API. Graphify is an accelerator when present, never a requirement.
+- Right-size: a trivial change gets a tight plan, not ceremony; a real change gets the full reasoning. Match and refine a ticket that already plans well.
+- Honor `houseRules` + `safety` in the plan itself (no em dashes, no AI attribution; carry project rails like code-only verification into the verification section).
 - Non-interactive: surface `openQuestions` in the result; do not block.

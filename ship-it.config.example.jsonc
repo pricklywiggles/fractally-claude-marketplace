@@ -52,13 +52,14 @@
 
   "concurrency": { "maxLanes": 4 },
 
-  // Per-issue planning: a concurrent, read-only plan per work-unit, gated at the Phase 3
-  // checkpoint, posted back to the tracker, and implemented against. Adaptive depth: thin
-  // tickets get a fuller plan, trivial ones stay terse.
+  // Per-issue planning: a comprehensive, read-only plan per work-unit (run as a Plan agent),
+  // posted to the tracker as a proposal for review, updated on feedback, then implemented
+  // against. Depth: light (terse) | adaptive (comprehensive for non-trivial, terse for trivial;
+  // default) | full (always comprehensive).
   "planning": {
     "enabled": true,
-    "postBack": true,    // post the approved plan back to the Linear issue (idempotent)
-    "depth": "adaptive"  // adaptive | light | full
+    "postBack": true,    // post the plan to the Linear issue as a proposal, update on feedback (idempotent)
+    "depth": "adaptive"  // light | adaptive | full
   },
 
   // Parallel reviewer fan-out over each diff (read-only). Default + extras.

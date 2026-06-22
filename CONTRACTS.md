@@ -54,7 +54,7 @@ Built-in sources:
 ```
 Tracker.resolve(selection) -> WorkUnit[]
 Tracker.branchName(issue) -> string   // branch convention that carries the auto-close link
-Tracker.postPlan(workUnit, planText) -> void   // idempotent: record the approved plan as a comment (planning.postBack)
+Tracker.postPlan(workUnit, planText, status) -> void   // idempotent: post the plan as a proposed/approved comment, update in place (planning.postBack)
 ```
 
 Built-in: `github-issues` (default, via gh), `linear` (via the Linear MCP). Others are project-provided skills/commands. A project with no tracker uses `working-tree` / `branch` / `describe`.
@@ -65,7 +65,7 @@ Each is a standalone skill with a flexible front-door: invoked by an orchestrato
 
 | Skill | Contract | Notes |
 |---|---|---|
-| `plan-one-issue` | produce a right-sized, read-only plan + predicted files + doc classification for the work-unit | feeds lanes + the checkpoint; `fix-one-issue` builds against it |
+| `plan-one-issue` | produce a comprehensive, read-only plan (context, approach, changes + reuse, decisions, edge cases, verification, risks) + predicted files + doc classification | runs as a `Plan` agent; feeds lanes + the checkpoint; `fix-one-issue` builds against it |
 | `fix-one-issue` | implement the work-unit's intent, verify, commit | uses `houseRules` + `verify`; the core |
 | `comment-cleanup` | audit + fix comments in the work-unit's diff | shipped (first inhabitant) |
 | `review-and-address` | fan out `review.reviewers` over the diff, merge findings, optionally apply warranted | see Reviewers |
@@ -114,7 +114,7 @@ Built-in jobs: `graphify` (regenerate), `openspec` (author-reconcile), `impeccab
 ## Orchestrators
 
 ### ship-issues (batch)
-`resolve work-units (source)` -> `plan each (concurrent, read-only)` -> `group into lanes (overlap graph)` -> `checkpoint` (post approved plans back) -> Workflow fan-out, per work-unit: `fix-one-issue` (against the plan) -> `comment-cleanup` (if comments changed) -> `review-and-address` (apply warranted) -> `open-pr` (push, open PR) -> `doc phase` (curate-serial writes now; author-reconcile + regenerate deferred) -> post-PR watchers (CI fan-out per PR; merge watcher then archive + regenerate). Lanes concurrent; stacked within a lane.
+`resolve work-units (source)` -> `plan each (concurrent Plan agents, read-only)` -> `post proposals` -> `group into lanes (overlap graph)` -> `checkpoint` (review on tracker or terminal; update on feedback, finalize on approval) -> Workflow fan-out, per work-unit: `fix-one-issue` (against the plan) -> `comment-cleanup` (if comments changed) -> `review-and-address` (apply warranted) -> `open-pr` (push, open PR) -> `doc phase` (curate-serial writes now; author-reconcile + regenerate deferred) -> post-PR watchers (CI fan-out per PR; merge watcher then archive + regenerate). Lanes concurrent; stacked within a lane.
 
 ## ship-it.config keys
 
@@ -131,7 +131,7 @@ JSON (JSONC accepted). Lives at `.claude/ship-it/config.json` (with `ship-it.con
 | `verify` | command(s) run inside the worktree after a change; `{changedFiles}` placeholder |
 | `worktree.enabled` / `.root` / `.prepare` / `.qaNotes` | worktree on/off, location (default `.claude/worktrees`), the make-runnable hook (runs in the worktree; `{wt}`/`{main}` substituted), and human run/QA caveats surfaced at handoff |
 | `concurrency.maxLanes` | parallel lane cap |
-| `planning.enabled` / `.postBack` / `.depth` | per-issue plan pass on/off (default on); post the approved plan back to the source, idempotent; plan depth `adaptive`/`light`/`full` |
+| `planning.enabled` / `.postBack` / `.depth` | per-issue plan pass on/off (default on); post the plan to the source as a proposal and update it on feedback, idempotent; depth `light` (terse) / `adaptive` (comprehensive for non-trivial, default) / `full` (always comprehensive) |
 | `review.reviewers` | the reviewer list (parallel fan-out) |
 | `ci.watch` / `.fixAttempts` | CI watch + bounded auto-fix |
 | `docs.jobs` | the doc-job list (parallel fan-out) |

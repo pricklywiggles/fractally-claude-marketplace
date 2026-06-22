@@ -18,6 +18,7 @@ Before touching anything, open with a short welcome that orients a first-time us
 >
 > **The stages** (the named skills below also run on their own, and `init` configures or swaps each):
 >
+> - **plan** (`plan-one-issue`): draft a right-sized plan per work-unit (validating any plan already in the ticket), checkpointed before any code.
 > - **implement** (`fix-one-issue`): make the change in a branch, verify, commit.
 > - **comment cleanup** (`comment-cleanup`): a pass that verifies and corrects comment overuse and verbosity in the change, keeping the non-obvious why and dropping narration.
 > - **review** (`review-and-address`): run your configured reviewers over the diff and apply the warranted feedback.
@@ -47,7 +48,7 @@ Read the repo and record what you find:
 ## 2. Interview (only the gaps)
 
 First show the user a short summary of everything you detected (the values you will use), so they see how much is already inferred and only the gaps remain. Then ask the gaps, batched into `AskUserQuestion` (a few at a time). **Never ask a bare question.** Each question carries its context: one line on what the setting controls, why ship-it needs it, and what each option means or trades off. Write the option descriptions concretely, for example, for merge strategy spell out that squash vs merge changes how stacked PRs and the post-merge archive behave; for reviewers, say what each one checks; for doc jobs, what "keep current" means for that doc. The gaps to cover:
-- **tracker**: ask the user to choose via `AskUserQuestion`, never pre-pick. Order the options: the trackers you detected as **available** first (for this repo, GitHub Issues and Linear), then other built-in trackers you did not detect (e.g. Jira), up to the 4-option limit; the harness adds **Other** automatically for a custom tracker (which becomes a custom resolver skill named in `source.tracker`). After they choose: Linear needs the project + team + id prefix; GitHub Issues needs the "todo" label; a custom one needs how to list and fetch its issues.
+- **tracker**: ask the user to choose via `AskUserQuestion`, never pre-pick. Order the options: the trackers you detected as **available** first (for this repo, GitHub Issues and Linear), then other built-in trackers you did not detect (e.g. Jira), up to the 4-option limit; the harness adds **Other** automatically for a custom tracker (which becomes a custom resolver skill named in `source.tracker`). After they choose: Linear needs the project + team + id prefix; GitHub Issues needs the "todo" label; a custom one needs how to list and fetch its issues. For any tracker source, also confirm **plan post-back** (`planning.postBack`, default on): after the plan checkpoint, ship-it posts each approved plan back to its issue as an idempotent comment so the ticket carries the agreed plan; offer to turn it off. Local sources have no tracker, so this is moot.
 - **merge strategy**: squash / merge / rebase. It cannot be fully detected and it changes stacked-PR and archive behavior, so propose a default, then confirm. **Recommend `merge`**: it preserves the base branch's commits, so stacked PRs (overlapping issues) retarget cleanly; squash rewrites those commits into one and strands the stacked child, which then needs workarounds. Use the repo's allowed methods (`gh api repos/{owner}/{repo} -q '{squash: .allow_squash_merge, merge: .allow_merge_commit, rebase: .allow_rebase_merge}'`) to rule out options the repo disallows, but lead with merge unless the team wants a linear history and accepts the stacking cost.
 - **reviewers**: which to run on each diff (multi-select from detected + known). Default to `pr-review-toolkit`; if it is not installed, offer the install command or let them point at another. More than one is fine. The `ref` you write is the reviewer's **invocation** name, which can differ from the skill's folder name: Vercel's React Best Practices sits in the skills folder as `react-best-practices` but is invoked as `vercel-react-best-practices`, so detect it by the folder name and write `vercel-react-best-practices` as the `ref`.
 - **doc jobs**: which docs to keep current and the mechanic for each (regenerate / author-reconcile / curate-serial). Built-ins for openspec, graphify, impeccable; for any other doc, capture its path, mechanic, and how to update it (step 4 generates the job).
@@ -64,7 +65,7 @@ Confirm the detected values in bulk rather than re-asking them, and ask only wha
 ## 3. Prerequisite and auth check
 
 Check and report (warn, do not fail):
-- tracker reachable (Linear MCP connected, or `gh auth status` for github-issues),
+- tracker reachable (Linear MCP connected, or `gh auth status` for github-issues); if `planning.postBack` is on, the tracker must also allow writing comments (Linear `save_comment`, or `gh` with issue-write scope),
 - `gh` authenticated,
 - doc-tool binaries on PATH (`openspec`, `graphify`) for the chosen doc jobs,
 - chosen reviewers installed (print the install command for any missing, e.g. `claude plugin install pr-review-toolkit@claude-plugins-official`, `npx skills add vercel-labs/agent-skills`).
@@ -94,6 +95,7 @@ Write the config to **`.claude/ship-it/config.json`** (ship-it's project home, b
 - `worktree`: `{ enabled, root, prepare, qaNotes }`.
 - `review.reviewers`: array of `{ name, kind (agent|skill|command), ref }`; `ref` is the **invocation** name (`pr-review-toolkit:code-reviewer`, `vercel-react-best-practices`).
 - `ci`: `{ watch (boolean on/off, default true; never a workflow path), fixAttempts }`.
+- `planning`: `{ enabled (boolean, default true), postBack (boolean, default true; posts the approved plan back to the tracker), depth (adaptive|light|full, default adaptive) }`.
 - `docs.jobs`: array of `{ name, mechanic (regenerate|author-reconcile|curate-serial), ref, target, appliesWhen }`; `ref` is the command/skill, `appliesWhen` the docNeed that triggers it (a regenerate job may omit `appliesWhen`).
 - `prTemplate`: `{ sections, verification }`.
 
@@ -101,4 +103,4 @@ Write the config to **`.claude/ship-it/config.json`** (ship-it's project home, b
 
 ## 6. Summary
 
-Tell the user the config is written, list any unmet prerequisites with their install commands, and point them at the next step: run `ship-it:ship-issues` for a batch, or any stage skill standalone (`ship-it:fix-one-issue`, `ship-it:comment-cleanup`, `ship-it:review-and-address`, `ship-it:open-pr`, `ship-it:ci-fix`).
+Tell the user the config is written, list any unmet prerequisites with their install commands, and point them at the next step: run `ship-it:ship-issues` for a batch, or any stage skill standalone (`ship-it:plan-one-issue`, `ship-it:fix-one-issue`, `ship-it:comment-cleanup`, `ship-it:review-and-address`, `ship-it:open-pr`, `ship-it:ci-fix`).

@@ -1,0 +1,11 @@
+[
+  { "query": "plan this issue before I start coding", "should_trigger": true },
+  { "query": "draft an implementation plan for FRA-123", "should_trigger": true },
+  { "query": "scope and plan this ticket, don't write code yet", "should_trigger": true },
+  { "query": "what's the approach to implement this work-unit?", "should_trigger": true },
+
+  { "query": "ship all the todo issues and open a PR for each", "should_trigger": false },
+  { "query": "implement fra-123, verify it, and commit", "should_trigger": false },
+  { "query": "review my diff with main and fix what matters", "should_trigger": false },
+  { "query": "open a PR for my current branch", "should_trigger": false }
+]

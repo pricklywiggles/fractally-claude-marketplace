@@ -41,4 +41,21 @@ An ad-hoc task from text: `title`/`desc` from the text; the orchestrator creates
 
 ## Output
 
-A normalized `WorkUnit[]`, passed to Phase 2 (scope + lanes). For tracker sources, each work-unit's `branch` is the tracker's branch name; for the local sources, the orchestrator assigns or creates branches per the lane plan. Resolving issues that do not exist is dropped and reported, never guessed.
+A normalized `WorkUnit[]`, passed to Phase 2 (plan and lanes). For tracker sources, each work-unit's `branch` is the tracker's branch name; for the local sources, the orchestrator assigns or creates branches per the lane plan. Resolving issues that do not exist is dropped and reported, never guessed.
+
+## Posting plans back (postPlan)
+
+Phase 3 of `ship-issues` posts each approved plan back to its source as a record, when `config.planning.postBack`. This extends the tracker adapter with one idempotent operation:
+
+```
+Tracker.postPlan(workUnit, planText) -> void   // create the plan comment, or update it if already present
+```
+
+Idempotency uses a hidden marker line at the top of the comment body, `<!-- ship-it-plan -->`, so re-runs update the same comment instead of stacking duplicates.
+
+- **`github-issues`**: list with `gh api repos/{owner}/{repo}/issues/{number}/comments`; if a body carries the marker, edit it with `gh api -X PATCH repos/{owner}/{repo}/issues/comments/{id} -f body=...`; otherwise create with `gh issue comment <number> --body <text>`. The body leads with the marker, then the plan.
+- **`linear`**: list the issue's comments (`list_comments`) and look for the marker; `save_comment` updates it by id when found, else creates one. The marker leads the body.
+- **custom**: if the resolver skill exposes a `postPlan` hook, call it; otherwise leave the plan on screen and note it was not posted.
+- **local sources** (`working-tree` / `branch` / `pr` / `describe`): no tracker target, so the plan stays on screen (it was already shown at the checkpoint).
+
+Posting is non-blocking: a failure to post is reported but never fails the run (the checkpoint, not the comment, is the gate).

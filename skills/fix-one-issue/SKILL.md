@@ -10,7 +10,7 @@ Take one work-unit's intent and land the smallest correct change for it in its b
 
 ## 1. Resolve the work-unit and working copy
 
-- **Orchestrated**: you are given a work-unit (`id`, `title`, `desc`, `branch`, `base`, `worktree`). If `worktree` is set but does not exist yet (a stacked child whose base only just committed), create it off `base`, then make it runnable:
+- **Orchestrated**: you are given a work-unit (`id`, `title`, `desc`, `branch`, `base`, `worktree`, and a `plan` when the planning stage ran). If `worktree` is set but does not exist yet (a stacked child whose base only just committed), create it off `base`, then make it runnable:
   ```bash
   git -C <main> worktree add -b <branch> <worktree> <base>   # retry once on an index-lock race
   <config.worktree.prepare, with {wt}=<worktree> and {main}=<main> substituted>
@@ -28,8 +28,10 @@ Load the resolved config via `${CLAUDE_PLUGIN_ROOT}/scripts/load-config.sh` (def
 
 ## 3. Implement
 
-1. Explore the working copy to find the exact code; scope every search to it.
-2. Make the **smallest correct change** that fully resolves the intent. Match surrounding style and conventions.
+If the work-unit carries a `plan` (from the planning stage), implement against it: the plan names the steps, files, and edge cases, so follow it rather than re-deriving the approach. For a **stacked child** (its `base` is a sibling branch, not `config.repo.mainBranch`), the plan was drafted before the parent landed, so first reconcile it with the parent's committed work: read `git -C <worktree> diff <config.repo.mainBranch>...HEAD` (everything the parent already put on your base) and adjust the plan for it before coding. With no plan (standalone, or planning disabled), proceed from exploration.
+
+1. Explore the working copy to find the exact code, or confirm the plan's predicted files; scope every search to it.
+2. Make the **smallest correct change** that fully resolves the intent, following the plan when present. Match surrounding style and conventions. If reality diverges from the plan, do the correct thing and note the divergence.
 3. Stay in scope: resolve this work-unit, nothing else.
 
 ## 4. Verify
@@ -46,7 +48,7 @@ Honor `houseRules`: no em dashes, no AI attribution. Do NOT push or open a PR; l
 
 ## 6. Classify documentation impact (do not write docs)
 
-For each configured doc job (`config.docs.jobs`), decide whether this change meets its trigger (`appliesWhen`): a user-facing capability / behavior / route / data-path change (a spec job), a reusable visual or design-system primitive (a design job), an architectural decision or boundary shift (an architecture job), and so on. Return the matching job names, or none. Most changes are none; do not over-classify. The doc phase runs the matching jobs later, so do not write docs here.
+For each configured doc job (`config.docs.jobs`), decide whether this change meets its trigger (`appliesWhen`): a user-facing capability / behavior / route / data-path change (a spec job), a reusable visual or design-system primitive (a design job), an architectural decision or boundary shift (an architecture job), and so on. Return the matching job names, or none. If the work-unit's `plan` carried a preliminary `docNeed`, treat it as a hint and confirm it against the actual change; you are the authority here, since you see what really changed. Most changes are none; do not over-classify. The doc phase runs the matching jobs later, so do not write docs here.
 
 ## Output
 

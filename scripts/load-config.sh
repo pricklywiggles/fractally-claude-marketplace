@@ -22,6 +22,7 @@ defaults='{
   "verify": [],
   "worktree": { "enabled": true, "root": ".claude/worktrees" },
   "concurrency": { "maxLanes": 8 },
+  "planning": { "enabled": true, "postBack": true, "depth": "adaptive" },
   "review": { "reviewers": [], "applyWarranted": true },
   "ci": { "watch": true, "fixAttempts": 2 },
   "docs": { "enabled": true, "jobs": [] }

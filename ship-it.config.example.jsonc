@@ -52,6 +52,15 @@
 
   "concurrency": { "maxLanes": 8 },
 
+  // Per-issue planning: a concurrent, read-only plan per work-unit, gated at the Phase 3
+  // checkpoint, posted back to the tracker, and implemented against. Adaptive depth: thin
+  // tickets get a fuller plan, trivial ones stay terse.
+  "planning": {
+    "enabled": true,
+    "postBack": true,    // post the approved plan back to the Linear issue (idempotent)
+    "depth": "adaptive"  // adaptive | light | full
+  },
+
   // Parallel reviewer fan-out over each diff (read-only). Default + extras.
   "review": {
     "reviewers": [

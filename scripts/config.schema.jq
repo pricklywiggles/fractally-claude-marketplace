@@ -12,7 +12,7 @@ def allowed($keys; $label):
 {
   errors: ([
 
-    allowed(["repo","source","houseRules","safety","verify","worktree","concurrency","review","ci","docs","prTemplate"]; "(top level)"),
+    allowed(["repo","source","houseRules","safety","verify","worktree","concurrency","review","ci","docs","prTemplate","planning"]; "(top level)"),
 
     (if (.repo|type) == "object" then (.repo | allowed(["mainBranch","mergeStrategy","slug"]; "repo")) else [] end),
     (.repo.mergeStrategy as $ms | if ($ms != null) and ((["squash","merge","rebase"] | index($ms)) == null)
@@ -56,7 +56,13 @@ def allowed($keys; $label):
     (if (.prTemplate|type) == "object" then
        (.prTemplate | allowed(["sections","verification"]; "prTemplate"))
        + (if .prTemplate.verification == null then ["prTemplate.verification is required (the rule for the Verification section)"] else [] end)
-     else [] end)
+     else [] end),
+
+    (if (.planning|type) == "object" then (.planning | allowed(["enabled","postBack","depth"]; "planning")) else [] end),
+    (.planning.depth as $d | if ($d != null) and ((["adaptive","light","full"] | index($d)) == null)
+       then ["planning.depth must be one of adaptive|light|full (got '\($d)')"] else [] end),
+    (if (.planning.enabled != null) and ((.planning.enabled|type) != "boolean") then ["planning.enabled must be a boolean"] else [] end),
+    (if (.planning.postBack != null) and ((.planning.postBack|type) != "boolean") then ["planning.postBack must be a boolean"] else [] end)
 
   ] | flatten),
 

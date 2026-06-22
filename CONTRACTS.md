@@ -28,10 +28,11 @@ WorkUnit {
   worktree?: string   // absolute path when work runs in a worktree
   url?:      string   // tracker / PR url
   prNumber?: number
+  plan?:     string   // the approved implementation plan; the implement stage builds against it
 }
 ```
 
-The diff a stage reasons about is `git diff <base>...HEAD` in the work-unit's branch/worktree, or the working-tree diff for the current-changes source.
+The diff a stage reasons about is `git diff <base>...HEAD` in the work-unit's branch/worktree, or the working-tree diff for the current-changes source. A stacked child's `plan` is drafted before its parent lands, so the implement stage reconciles it against the parent's committed changes first.
 
 ## Sources (produce work-units)
 
@@ -53,6 +54,7 @@ Built-in sources:
 ```
 Tracker.resolve(selection) -> WorkUnit[]
 Tracker.branchName(issue) -> string   // branch convention that carries the auto-close link
+Tracker.postPlan(workUnit, planText) -> void   // idempotent: record the approved plan as a comment (planning.postBack)
 ```
 
 Built-in: `github-issues` (default, via gh), `linear` (via the Linear MCP). Others are project-provided skills/commands. A project with no tracker uses `working-tree` / `branch` / `describe`.
@@ -63,6 +65,7 @@ Each is a standalone skill with a flexible front-door: invoked by an orchestrato
 
 | Skill | Contract | Notes |
 |---|---|---|
+| `plan-one-issue` | produce a right-sized, read-only plan + predicted files + doc classification for the work-unit | feeds lanes + the checkpoint; `fix-one-issue` builds against it |
 | `fix-one-issue` | implement the work-unit's intent, verify, commit | uses `houseRules` + `verify`; the core |
 | `comment-cleanup` | audit + fix comments in the work-unit's diff | shipped (first inhabitant) |
 | `review-and-address` | fan out `review.reviewers` over the diff, merge findings, optionally apply warranted | see Reviewers |
@@ -111,7 +114,7 @@ Built-in jobs: `graphify` (regenerate), `openspec` (author-reconcile), `impeccab
 ## Orchestrators
 
 ### ship-issues (batch)
-`resolve work-units (source)` -> `scope + group into lanes (overlap graph)` -> Workflow fan-out, per work-unit: `fix-one-issue` -> `comment-cleanup` (if comments changed) -> `review-and-address` (apply warranted) -> `open-pr` (push, open PR) -> `doc phase` (curate-serial writes now; author-reconcile + regenerate deferred) -> post-PR watchers (CI fan-out per PR; merge watcher then archive + regenerate). Lanes concurrent; stacked within a lane.
+`resolve work-units (source)` -> `plan each (concurrent, read-only)` -> `group into lanes (overlap graph)` -> `checkpoint` (post approved plans back) -> Workflow fan-out, per work-unit: `fix-one-issue` (against the plan) -> `comment-cleanup` (if comments changed) -> `review-and-address` (apply warranted) -> `open-pr` (push, open PR) -> `doc phase` (curate-serial writes now; author-reconcile + regenerate deferred) -> post-PR watchers (CI fan-out per PR; merge watcher then archive + regenerate). Lanes concurrent; stacked within a lane.
 
 ## ship-it.config keys
 
@@ -128,6 +131,7 @@ JSON (JSONC accepted). Lives at `.claude/ship-it/config.json` (with `ship-it.con
 | `verify` | command(s) run inside the worktree after a change; `{changedFiles}` placeholder |
 | `worktree.enabled` / `.root` / `.prepare` / `.qaNotes` | worktree on/off, location (default `.claude/worktrees`), the make-runnable hook (runs in the worktree; `{wt}`/`{main}` substituted), and human run/QA caveats surfaced at handoff |
 | `concurrency.maxLanes` | parallel lane cap |
+| `planning.enabled` / `.postBack` / `.depth` | per-issue plan pass on/off (default on); post the approved plan back to the source, idempotent; plan depth `adaptive`/`light`/`full` |
 | `review.reviewers` | the reviewer list (parallel fan-out) |
 | `ci.watch` / `.fixAttempts` | CI watch + bounded auto-fix |
 | `docs.jobs` | the doc-job list (parallel fan-out) |
@@ -148,5 +152,5 @@ Detect-first, ask-second. Detects package manager, verify command, CI system, tr
 
 ## Status
 
-- **Built (in plugin)**: stage skills `comment-cleanup`, `ci-fix`, `review-and-address`, `fix-one-issue`, `open-pr`; the `ship-issues` orchestrator (lanes + the Workflow template chaining the stage skills) with built-in **sources** resolution and **doc-job runners** (`references/doc-jobs.md`: the three mechanics, built-in graphify/openspec/impeccable jobs, the post-merge reconcile flow); the **`init`** front-door skill (detect + interview + write `ship-it.config` + generate novel doc-job skills); a shared **config-loader** (`scripts/load-config.sh`: locate + default + inline `@FILE` refs, so skills read the config uniformly); bundled scripts `ci-watch.sh`, `openspec-archive.sh`, `watch-merges.sh`, `setup-worktrees.sh`, `cleanup-worktrees.sh`, `load-config.sh`.
+- **Built (in plugin)**: stage skills `plan-one-issue`, `comment-cleanup`, `ci-fix`, `review-and-address`, `fix-one-issue`, `open-pr`; the `ship-issues` orchestrator (lanes + the Workflow template chaining the stage skills) with a per-issue **planning phase** (concurrent read-only plans gated at the checkpoint, posted back via the tracker adapter's `postPlan`, implemented against), built-in **sources** resolution and **doc-job runners** (`references/doc-jobs.md`: the three mechanics, built-in graphify/openspec/impeccable jobs, the post-merge reconcile flow); the **`init`** front-door skill (detect + interview + write `ship-it.config` + generate novel doc-job skills); a shared **config-loader** (`scripts/load-config.sh`: locate + default + inline `@FILE` refs, so skills read the config uniformly); bundled scripts `ci-watch.sh`, `openspec-archive.sh`, `watch-merges.sh`, `setup-worktrees.sh`, `cleanup-worktrees.sh`, `load-config.sh`.
 - **To build, in order**: validate on a second, non-Sanum repo (the abstraction test).

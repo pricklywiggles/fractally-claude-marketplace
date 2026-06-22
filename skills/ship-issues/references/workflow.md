@@ -6,7 +6,7 @@ Read before Phase 5. It covers (1) turning scoped work-units into concurrent lan
 
 The aim: maximize concurrency without letting two work-units' PRs collide. Two collide only if they edit the same file.
 
-1. From the Phase 2 scope pass you have, per work-unit, a predicted set of files. Normalize to repo-relative paths; a directory or component area covers any file under it.
+1. From the Phase 2 plan pass (or scope pass, when planning is off) you have, per work-unit, a predicted set of files. Normalize to repo-relative paths; a directory or component area covers any file under it.
 2. Build an undirected graph: one node per work-unit, an edge between two whose predicted file sets intersect. Be conservative: if two clearly work the same feature even with slightly different predicted paths, draw the edge. A false overlap costs a little parallelism; a false independence costs a merge conflict.
 3. The connected components are the **lanes**. One work-unit = independent; several = a collision cluster.
 4. Order within a lane (ascending id is a fine default). The lane runs sequentially on stacked branches:
@@ -18,7 +18,7 @@ Common case: every work-unit is in a different area, so every lane has one item 
 
 ## 2. The Workflow script
 
-Adapt the template: pass `args = { main, repo, configPath, lanes }`, where `configPath` points at the project's `ship-it.config` and each work-unit object is `{ id, title, desc, branch, base, prBase, wt, url, focus }` (`focus` is the scoped approach + predicted files from Phase 2). Launch with the **Workflow** tool. Lanes map to `parallel(...)`; within a lane the items are an awaited sequential loop (concurrent-lanes + sequential-within-lane for free).
+Adapt the template: pass `args = { main, repo, configPath, lanes }`, where `configPath` points at the project's `ship-it.config` and each work-unit object is `{ id, title, desc, branch, base, prBase, wt, url, focus, plan }` (`focus` is the scoped approach + predicted files from Phase 2; `plan` is the approved plan from the Phase 2 plan pass, present when `config.planning.enabled`). Launch with the **Workflow** tool. Lanes map to `parallel(...)`; within a lane the items are an awaited sequential loop (concurrent-lanes + sequential-within-lane for free).
 
 The per-work-unit pipeline **invokes the ship-it stage skills**; it does not reimplement them. The stage skills read `ship-it.config` themselves, so the agent prompts are thin wrappers that hand over the work-unit and the config path.
 
@@ -73,7 +73,7 @@ Do all work inside ${issue.wt}; never touch ${main}. Return only the skill's str
 }
 
 async function runIssue(issue) {
-  const impl = await agent(invoke('ship-it:fix-one-issue', issue), { label: `impl:${issue.id}`, phase: 'Implement', schema: IMPL_SCHEMA })
+  const impl = await agent(invoke('ship-it:fix-one-issue', issue, 'Implement against issue.plan when present; for a stacked child, first reconcile the plan with the parent changes already on its base.'), { label: `impl:${issue.id}`, phase: 'Implement', schema: IMPL_SCHEMA })
   if (!impl || !impl.committed) {
     return { issueId: issue.id, pushed: false, prUrl: '', finalSummary: 'implement did not complete', notes: (impl && impl.notes) || 'impl failed' }
   }
@@ -108,5 +108,6 @@ return { results: laneResults.flat() }
 
 - Pass `args` as a real JSON object to the Workflow tool: `{ main, repo, configPath, lanes }`. Do not stringify it.
 - The per-stage agents invoke the stage skills, which read `ship-it.config` themselves; keep the prompts thin so the skills stay the single source of truth.
+- The Phase 2 plan pass (one `ship-it:plan-one-issue` per work-unit) runs before this Workflow; each work-unit's approved `plan` rides in its object, and `fix-one-issue` implements against it.
 - If a stage skill fails to resolve or returns null, the issue degrades rather than crashing the batch (finalize just has less to act on).
 - After the Workflow returns: read the per-work-unit results (including `docNeed`), run Phase 6 (doc-job fan-out), launch Phase 7 watchers, then print the Phase 8 summary. Verify PRs with `gh pr list`.

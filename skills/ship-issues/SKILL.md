@@ -16,17 +16,21 @@ Drive a set of work-units to open PRs concurrently, chaining the ship-it stage s
 
 Read each item's full intent. If any is ambiguous in a way that changes the implementation, batch the open questions into one `AskUserQuestion` now. All interactivity is front-loaded here and at the Phase 3 checkpoint. See `references/sources.md` for the source dispatch, the built-in tracker adapters (`github-issues`, `linear`), the local sources (working-tree / branch / pr / describe), and the custom-tracker extension point.
 
-**Trigger tokens.** Two optional switches, anywhere in the trigger: a **skip-confirmation** token (`skip confirm`, `no confirm`, `no checkpoint`, `without asking`, `just do it`, `yolo`, `-y`, `--yes`) turns off the Phase 3 checkpoint; a **skip-docs** token (`no docs`, `skip docs`, `code only`, `no specs`) turns off the whole documentation phase (Phase 6) for this run, regardless of `config.docs.enabled`.
+**Trigger tokens.** Three optional switches, anywhere in the trigger: a **skip-confirmation** token (`skip confirm`, `no confirm`, `no checkpoint`, `without asking`, `just do it`, `yolo`, `-y`, `--yes`) turns off the Phase 3 checkpoint; a **skip-docs** token (`no docs`, `skip docs`, `code only`, `no specs`) turns off the whole documentation phase (Phase 6) for this run, regardless of `config.docs.enabled`; a **skip-planning** token (`no plan`, `skip plan`, `skip planning`) turns off the Phase 2 plan pass (it falls back to a thin scope pass), regardless of `config.planning.enabled`.
 
-## Phase 2: Scope and group into lanes
+## Phase 2: Plan and group into lanes
 
-1. **Scope pass** (parallel, read-only): one `Explore` subagent per work-unit to predict the files it touches, a one-line approach, and a preliminary doc classification (which of `config.docs.jobs` it triggers). Locate, do not implement.
-2. **Group into lanes** by the overlap-graph algorithm in `references/workflow.md` (connected components of "edit the same file"). Lanes run concurrently; within a lane, work-units run sequentially on stacked branches.
+1. **Plan pass** (parallel, read-only): unless `config.planning.enabled` is false (default true) or a skip-planning token is in the trigger, run one **`ship-it:plan-one-issue`** per work-unit, concurrently (one read-only agent each, the same fan-out shape as a scope pass). Each returns `{ plan, predictedFiles, docNeed, complexity, openQuestions }`: a right-sized plan the implement stage will build against, the files it predicts, a preliminary doc classification, and any open questions. If planning is off, fall back to a thin **scope pass**: one `Explore` subagent per work-unit for predicted files, a one-line approach, and the doc classification. Either way, locate, do not implement.
+2. **Group into lanes** by the overlap-graph algorithm in `references/workflow.md` (connected components of "edit the same file"), using each work-unit's `predictedFiles`. Lanes run concurrently; within a lane, work-units run sequentially on stacked branches.
 3. Branch + base per work-unit: lane head off `config.repo.mainBranch`; a stacked child off its parent branch.
+
+Fold any `openQuestions` the plan pass surfaced into the Phase 3 checkpoint, or resolve blocking ones with one `AskUserQuestion` before it.
 
 ## Phase 3: Checkpoint on the plan
 
-Unless a skip-confirmation token is in the trigger, show the plan and wait: the resolved work-units, the lanes (concurrent vs stacked), the predicted files, the predicted doc jobs, and a note that verification is `config.verify` and any `config.safety` rails apply. Apply corrections. Under a skip token, print the plan anyway and proceed without pausing.
+Unless a skip-confirmation token is in the trigger, show the plan and wait: the resolved work-units, **each work-unit's plan** (from the plan pass), the lanes (concurrent vs stacked), the predicted files, the predicted doc jobs, and a note that verification is `config.verify` and any `config.safety` rails apply. Apply corrections (a correction to a plan updates that work-unit's `plan`). Under a skip token, print the plan anyway and proceed without pausing.
+
+**Post the approved plan back.** Once the checkpoint passes (or immediately, under a skip token), if `config.planning.postBack` and a plan pass ran, post each work-unit's approved plan back to its source via the tracker adapter's `postPlan` (idempotent; see `references/sources.md`). This is a non-blocking record: the checkpoint is the gate, the comment is the paper trail. Local sources (working-tree / branch / pr / describe) have no tracker target, so the plan stays on screen.
 
 ## Phase 4: Pre-create lane-head worktrees
 
@@ -36,7 +40,7 @@ If `config.worktree.enabled`, create each lane head's worktree under `config.wor
 
 Adapt the Workflow template in `references/workflow.md` (fill in the resolved lanes and the path to `ship-it.config`), then launch it with the **Workflow** tool. Per work-unit the pipeline chains the stage skills (it never reimplements them):
 
-1. **`ship-it:fix-one-issue`** (creating the worktree first if a stacked child), commit. Returns `addedComments` and `docNeed`.
+1. **`ship-it:fix-one-issue`** (creating the worktree first if a stacked child), implementing against the work-unit's `plan` when present (a stacked child first reconciles its plan with the parent's changes already on its base), then commit. Returns `addedComments` and `docNeed`.
 2. **`ship-it:comment-cleanup`** in apply mode, scoped to the work-unit's commit range, only if `addedComments`. Code-modifying, so sequential within a lane; concurrent across lanes.
 3. **`ship-it:review-and-address`** over the work-unit's diff (fans out `config.review.reviewers`, merges findings, applies warranted per `config.review.applyWarranted`).
 4. **`ship-it:open-pr`**: push the branch and open a PR per `config.prTemplate` (base `main` for a lane head, the parent branch for a stacked child; GitHub auto-retargets a stacked PR to main when its parent merges).
@@ -71,7 +75,7 @@ Print a table: work-unit, PR link, lane, what changed, review items applied/skip
 
 ## Bundled files
 
-- `references/sources.md` - how Phase 1 resolves the trigger into work-units: source dispatch, the built-in tracker adapters, and the custom-tracker extension point. Read before Phase 1.
+- `references/sources.md` - how Phase 1 resolves the trigger into work-units (source dispatch, the built-in tracker adapters, the custom-tracker extension point) and the tracker adapter's `postPlan` used in Phase 3. Read before Phase 1.
 - `references/workflow.md` - the lane-grouping algorithm and the Workflow script template to adapt. Read before Phase 5.
 - `references/doc-jobs.md` - the three doc-job mechanics, the built-in jobs, and the post-merge reconcile flow. Read before Phase 6.
 - `${CLAUDE_PLUGIN_ROOT}/scripts/openspec-archive.sh` - the openspec author-reconcile reconcile (merged-gated `openspec archive`, batched docs PR).

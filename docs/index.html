@@ -200,8 +200,13 @@
             <h3 class="text-lg font-medium text-zinc-100">Install the plugin</h3>
             <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-zinc-400">Add the marketplace, then enable ship-it. Refresh the marketplace clone first to get the latest version.</p>
           </div>
-          <pre class="overflow-x-auto rounded-lg border border-white/10 bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300"><span class="text-accent">$</span> claude plugin marketplace add pricklywiggles/ship-it
-<span class="text-accent">$</span> claude plugin install ship-it@pricklywiggles</pre>
+         <div class="group relative">
+            <button onclick="var t='claude plugin marketplace add pricklywiggles/ship-it\\nclaude plugin install ship-it@pricklywiggles';navigator.clipboard.writeText(t);this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-accent\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><path d=\'M5 12l4 4L19 6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>';setTimeout(()=>{this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-zinc-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.8\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg>'},2000)" class="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-500 opacity-0 transition-all hover:bg-zinc-800 hover:text-zinc-200 group-hover:opacity-100" title="Copy to clipboard">
+              <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-500" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+            <pre class="overflow-x-auto rounded-lg border border-white/10 bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300">claude plugin marketplace add pricklywiggles/ship-it
+claude plugin install ship-it@pricklywiggles</pre>
+          </div>
         </div>
         <!-- step 2 -->
         <div class="grid grid-cols-1 gap-5 bg-zinc-900/30 p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">

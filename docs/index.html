@@ -3,33 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ship-it — the manual</title>
+  <title>ship-it: the manual</title>
   <meta name="description" content="ship-it: drive a batch of tracker issues or your current changes from issue to merged PR, concurrently, with a deliberate planning phase and living docs kept in sync. The manual for v0.2.0." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
   <style type="text/tailwindcss">
-    @theme {
-      --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
-      --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
-      --color-accent: oklch(0.76 0.12 168);
-      --color-accent-dim: oklch(0.58 0.09 168);
-      --color-ink: oklch(0.16 0.005 285);
-      --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-  </style>
+     @theme {
+       --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+       --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+       --color-accent: oklch(0.72 0.16 168);
+       --color-accent-dim: oklch(0.55 0.12 168);
+       --color-ink: oklch(0.16 0.005 285);
+       --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+
+       /* teal-tinted neutrals: harmonize with accent instead of dead zinc */
+       --color-heading: oklch(0.94 0.01 168);
+       --color-body: oklch(0.72 0.01 168);
+       --color-muted: oklch(0.55 0.01 168);
+       --color-disabled: oklch(0.42 0.01 168);
+       --color-surface: oklch(0.17 0.01 168);
+       --color-border-subtle: oklch(1 0 0 / 0.08);
+     }
+   </style>
 
   <style>
     :root { color-scheme: dark; }
     html { scroll-behavior: smooth; }
     body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-    ::selection { background: oklch(0.76 0.12 168 / 0.28); color: #fff; }
+    ::selection { background: oklch(0.72 0.16 168 / 0.3); color: #fff; }
 
     /* Slim custom scrollbar */
     ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -43,9 +51,17 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
+    /* Disable grain on small mobile (reduces repaint stress) */
+    @media (max-width: 640px) {
+      .grain::before { display: none; }
+    }
+
     /* Aurora mesh, slow drift, behind the hero only */
     @keyframes drift { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(4%,-3%,0) scale(1.08); } }
     .aurora { filter: blur(72px); animation: drift 18s ease-in-out infinite; will-change: transform; }
+
+    /* Section kicker: shared pattern with intentional variation */
+    .kicker { font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, monospace; text-transform: uppercase; letter-spacing: 0.2em; }
 
     /* Kinetic marquee */
     @keyframes marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
@@ -78,31 +94,31 @@
   </style>
 </head>
 
-<body class="grain bg-zinc-950 font-sans text-zinc-400 antialiased selection:text-white">
+<body class="grain bg-zinc-950 font-sans text-body antialiased selection:text-white">
 
   <!-- scroll progress -->
   <div class="fixed inset-x-0 top-0 z-[70] h-px bg-zinc-800">
-    <div id="progress" class="h-full origin-left scale-x-0 bg-gradient-to-r from-accent-dim to-accent"></div>
+    <div id="progress" class="h-full origin-left scale-x-0 bg-accent shadow-[0_0_12px_oklch(0.72_0.16_168/0.5)]"></div>
   </div>
 
   <!-- nav -->
   <header class="fixed inset-x-0 top-0 z-50">
-    <nav class="mx-auto mt-3 flex max-w-[1400px] items-center justify-between rounded-2xl border border-white/10 bg-zinc-950/70 px-4 py-2.5 backdrop-blur-xl sm:px-5">
+    <nav class="mx-auto mt-3 flex max-w-[1400px] items-center justify-between rounded-2xl border border-border-subtle bg-zinc-950/80 px-4 py-2.5 backdrop-blur-xl sm:px-5">
       <a href="#top" class="flex items-center gap-2.5 tap">
         <span class="grid h-7 w-7 place-items-center rounded-lg border border-accent/30 bg-accent/10">
-          <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
-        <span class="font-mono text-sm font-medium tracking-tight text-zinc-100">ship-it</span>
-        <span class="hidden rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 sm:inline">v0.2.0</span>
+        <span class="font-mono text-sm font-medium tracking-tight text-heading">ship-it</span>
+        <span class="hidden rounded-md border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-muted sm:inline">v0.2.0</span>
       </a>
-      <div class="hidden items-center gap-7 text-[13px] text-zinc-400 lg:flex">
-        <a href="#model" class="hover:text-zinc-100">Model</a>
-        <a href="#start" class="hover:text-zinc-100">Get started</a>
-        <a href="#pipeline" class="hover:text-zinc-100">Pipeline</a>
-        <a href="#planning" class="hover:text-zinc-100">Planning</a>
-        <a href="#skills" class="hover:text-zinc-100">Skills</a>
-        <a href="#config" class="hover:text-zinc-100">Config</a>
-        <a href="#usage" class="hover:text-zinc-100">Usage</a>
+      <div class="hidden items-center gap-7 text-[13px] text-body lg:flex">
+        <a href="#model" class="hover:text-heading">Model</a>
+        <a href="#start" class="hover:text-heading">Get started</a>
+        <a href="#pipeline" class="hover:text-heading">Pipeline</a>
+        <a href="#planning" class="hover:text-heading">Planning</a>
+        <a href="#skills" class="hover:text-heading">Skills</a>
+        <a href="#config" class="hover:text-heading">Config</a>
+        <a href="#usage" class="hover:text-heading">Usage</a>
       </div>
       <a href="#start" class="tap rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-1.5 font-mono text-xs text-accent hover:bg-accent/20">get started</a>
     </nav>
@@ -112,56 +128,57 @@
 
     <!-- ===================== HERO ===================== -->
     <section class="relative min-h-[100dvh] overflow-hidden">
-      <!-- aurora backdrop -->
       <div class="pointer-events-none absolute inset-0 -z-10">
-        <div class="aurora absolute -left-32 top-10 h-[36rem] w-[36rem] rounded-full bg-accent/10"></div>
-        <div class="aurora absolute right-0 top-40 h-[30rem] w-[30rem] rounded-full bg-emerald-500/5" style="animation-delay:-6s"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,transparent,#09090b_85%)]"></div>
-        <div class="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(to_right,#3f3f46_1px,transparent_1px),linear-gradient(to_bottom,#3f3f46_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(50%_45%_at_50%_30%,#000,transparent)]"></div>
+        <div class="aurora absolute -left-48 top-0 h-[50rem] w-[50rem] rounded-full bg-accent/[0.12]"></div>
+        <div class="aurora absolute -right-20 top-60 h-[40rem] w-[40rem] rounded-full bg-emerald-500/8" style="animation-delay:-6s"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_0%,transparent,#09090b_80%)]"></div>
+        <div class="absolute inset-0 opacity-[0.22] [background-image:linear-gradient(to_right,#3f3f46_1px,transparent_1px),linear-gradient(to_bottom,#3f3f46_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(50%_45%_at_50%_30%,#000,transparent)]"></div>
       </div>
 
-      <div class="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-16 px-5 pb-24 pt-40 lg:grid-cols-[1.05fr_0.95fr] lg:pt-44">
-        <!-- left: copy -->
+      <div class="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-8 px-5 pb-20 pt-36 lg:grid-cols-[1.05fr_0.95fr] lg:pt-40">
         <div>
-          <div class="reveal mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">
-            <span class="relative flex h-1.5 w-1.5"><span class="pulse-ring absolute inline-flex h-full w-full rounded-full bg-accent"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent"></span></span>
-            <span class="font-mono text-[11px] text-zinc-400">Your full dev cycle in one place</span>
-          </div>
-          <h1 class="reveal text-balance text-4xl font-semibold leading-[1.02] tracking-tighter text-zinc-100 sm:text-5xl md:text-6xl">
-            From a tracker issue<br />to a merged PR.<br /><span class="text-accent">A batch at a time.</span>
+          <div class="reveal mb-8 font-mono text-[13px] font-medium tracking-[0.25em] uppercase text-accent/80">orchestrator</div>
+
+          <h1 class="reveal text-balance font-black leading-[0.92] tracking-[-0.035em] text-heading sm:text-6xl md:text-7xl lg:text-[5.5rem]">
+            from ticket<br />
+            to <span class="text-accent">merged feature</span>.<br />
+            <span class="block text-2xl font-light tracking-tight text-muted sm:text-3xl md:text-4xl lg:text-5xl mt-2 md:mt-4">a batch at a time.</span>
           </h1>
-          <p class="reveal mt-7 max-w-[58ch] text-pretty text-base leading-relaxed text-zinc-400 md:text-lg">
-            <span class="font-mono text-zinc-200">ship-it</span> is a configurable orchestrator that drives issues (or your current local changes) through
-            <span class="text-zinc-200">plan, implement, comment cleanup, review, and PR</span>, concurrently across a batch, and keeps living docs in step.
-            Every stage is also a standalone skill you can run on its own.
+
+          <p class="reveal mt-8 max-w-[52ch] text-pretty text-sm leading-relaxed text-body md:text-base">
+            <span class="font-mono text-zinc-200">ship-it</span> drives issue tracker tickets (or local changes) through
+            plan, implement, review, and PR, concurrently across a batch, keeping living docs in step and enforcing rules.
+            Every stage is also a standalone skill you can call on its own.
           </p>
+
           <div class="reveal mt-9 flex flex-wrap items-center gap-3">
-            <a href="#start" class="tap group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 font-mono text-sm font-medium text-ink hover:bg-accent/90">
-              Get started
-              <svg viewBox="0 0 24 24" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <a href="#start" class="tap group inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-mono text-sm font-semibold text-ink hover:bg-accent/90">
+              get started
+              <svg viewBox="0 0 24 24" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="#pipeline" class="tap inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-5 py-3 font-mono text-sm text-zinc-300 hover:border-white/20 hover:text-zinc-100">See the pipeline</a>
+            <a href="#pipeline" class="tap inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-6 py-3.5 font-mono text-sm text-zinc-300 hover:border-white/20 hover:text-heading">see the pipeline</a>
           </div>
-          <div class="reveal mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-xs text-zinc-500">
-            <span><span class="text-zinc-300">8</span> skills</span>
-            <span><span class="text-zinc-300">concurrent</span> lanes</span>
-            <span><span class="text-zinc-300">git</span> worktrees</span>
-            <span><span class="text-zinc-300">code-only</span> verify</span>
+
+           <div class="reveal mt-10 flex flex-wrap gap-x-7 gap-y-2.5 font-mono text-[11px] text-disabled">
+            <span><span class="text-zinc-300">8</span>&nbsp; skills</span>
+            <span><span class="text-zinc-300">concurrent</span>&nbsp; lanes</span>
+            <span><span class="text-zinc-300">git</span>&nbsp; worktrees</span>
+            <span><span class="text-zinc-300">code-only</span>&nbsp; verify</span>
           </div>
         </div>
 
         <!-- right: live terminal + mini pipeline -->
-        <div class="reveal">
-          <div class="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/40 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)] backdrop-blur-sm">
-            <div class="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+        <div class="reveal terminal-parallax lg:translate-y-4">
+          <div class="overflow-hidden rounded-2xl border border-border-subtle bg-surface/40 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+            <div class="flex items-center gap-2 border-b border-border-subtle px-4 py-3">
               <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
               <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
               <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
-              <span class="ml-2 font-mono text-[11px] text-zinc-500">claude code</span>
+              <span class="ml-2 font-mono text-[11px] text-muted">claude code</span>
             </div>
             <div class="space-y-3 p-5 font-mono text-[12.5px] leading-relaxed sm:text-[13px]">
-              <p class="text-zinc-500"><span class="text-accent">&gt;</span> <span class="text-zinc-200">ship all the todo issues</span><span class="caret text-accent">_</span></p>
-              <div class="space-y-2 text-zinc-400" data-stagger>
+              <p class="text-muted"><span class="text-accent">&gt;</span> <span class="text-zinc-200">ship all the todo issues</span><span class="caret text-accent">_</span></p>
+              <div class="space-y-2 text-body" data-stagger>
                 <p><span class="text-accent-dim">resolve</span> &nbsp;2 work-units from Linear &middot; FRA-144, FRA-145</p>
                 <p><span class="text-accent-dim">plan</span> &nbsp;&nbsp;&nbsp;2 comprehensive plans (Plan agents), posted as proposals</p>
                 <p><span class="text-accent-dim">lanes</span> &nbsp;&nbsp;2 concurrent &middot; no file overlap</p>
@@ -169,94 +186,92 @@
               </div>
               <div class="my-3 h-px bg-white/10"></div>
               <div class="grid grid-cols-2 gap-3 text-[11px]">
-                <div class="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                  <p class="text-zinc-500">FRA-144</p>
+                <div class="rounded-lg border border-border-subtle bg-white/[0.02] p-3">
+                  <p class="text-muted">FRA-144</p>
                   <p class="mt-1 text-zinc-200">#224 <span class="text-accent">green</span></p>
                 </div>
-                <div class="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                  <p class="text-zinc-500">FRA-145</p>
+                <div class="rounded-lg border border-border-subtle bg-white/[0.02] p-3">
+                  <p class="text-muted">FRA-145</p>
                   <p class="mt-1 text-zinc-200">#225 <span class="text-accent">green</span></p>
                 </div>
               </div>
             </div>
           </div>
-          <p class="mt-3 text-center font-mono text-[11px] text-zinc-600">one prompt &middot; two issues &middot; two reviewed PRs</p>
+          <p class="mt-4 font-mono text-[10px] tracking-wider text-disabled uppercase">one prompt &middot; two issues &middot; two reviewed PRs</p>
         </div>
       </div>
     </section>
 
     <!-- ===================== GET STARTED ===================== -->
-    <section id="start" class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section id="start" class="mx-auto max-w-[1400px] px-5 py-20 md:py-28">
       <div class="reveal max-w-[60ch]">
-        <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">Get started</p>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">Three steps to your first batch</h2>
+        <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">get started in three steps</h2>
       </div>
 
-      <div class="mt-14 space-y-px overflow-hidden rounded-2xl border border-white/10" data-stagger>
+      <div class="mt-14 space-y-px overflow-hidden rounded-2xl border border-border-subtle" data-stagger>
         <!-- step 1 -->
-        <div class="grid grid-cols-1 gap-5 bg-zinc-900/30 p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
+        <div class="grid grid-cols-1 gap-5 bg-transparent p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
           <span class="font-mono text-4xl font-light text-zinc-700">01</span>
           <div>
-            <h3 class="text-lg font-medium text-zinc-100">Install the plugin</h3>
-            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-zinc-400">Add the marketplace, then enable ship-it. Refresh the marketplace clone first to get the latest version.</p>
+            <h3 class="text-xl font-semibold text-heading">install the plugin</h3>
+            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-body">Add the marketplace, then enable ship-it. Refresh the marketplace clone first to get the latest version.</p>
           </div>
          <div class="group relative">
-            <button onclick="var t='claude plugin marketplace add pricklywiggles/ship-it\\nclaude plugin install ship-it@pricklywiggles';navigator.clipboard.writeText(t);this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-accent\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><path d=\'M5 12l4 4L19 6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>';setTimeout(()=>{this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-zinc-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.8\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg>'},2000)" class="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-500 opacity-0 transition-all hover:bg-zinc-800 hover:text-zinc-200 group-hover:opacity-100" title="Copy to clipboard">
-              <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-500" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <button onclick="var t='claude plugin marketplace add pricklywiggles/ship-it\\nclaude plugin install ship-it@pricklywiggles';navigator.clipboard.writeText(t);this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-accent\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><path d=\'M5 12l4 4L19 6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>';setTimeout(()=>{this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-muted\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.8\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg>'},2000)" class="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-surface text-muted opacity-0 transition-all hover:bg-zinc-800 hover:text-zinc-200 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 group-hover:opacity-100" aria-label="Copy commands to clipboard" title="Copy to clipboard">
+              <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             </button>
-            <pre class="overflow-x-auto rounded-lg border border-white/10 bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300">claude plugin marketplace add pricklywiggles/ship-it
+            <pre class="overflow-x-auto rounded-lg border border-border-subtle bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300" role="region" aria-label="Installation commands">claude plugin marketplace add pricklywiggles/ship-it
 claude plugin install ship-it@pricklywiggles</pre>
           </div>
         </div>
         <!-- step 2 -->
-        <div class="grid grid-cols-1 gap-5 bg-zinc-900/30 p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
+        <div class="grid grid-cols-1 gap-5 bg-transparent p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
           <span class="font-mono text-4xl font-light text-zinc-700">02</span>
           <div>
-            <h3 class="text-lg font-medium text-zinc-100">Adapt it to your project</h3>
-            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-zinc-400">Run init. It detects what it can, asks only the gaps, writes <span class="font-mono text-zinc-300">.claude/ship-it/config.json</span>, and self-verifies on disk.</p>
+            <h3 class="text-xl font-semibold text-heading">adapt it to your project</h3>
+            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-body">Run init. It detects what it can, asks only the gaps, writes <span class="font-mono text-zinc-300">.claude/ship-it/config.json</span>, and self-verifies on disk.</p>
           </div>
-          <pre class="overflow-x-auto rounded-lg border border-white/10 bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300"><span class="text-accent">&gt;</span> /ship-it:init
+          <pre class="overflow-x-auto rounded-lg border border-border-subtle bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300" role="region" aria-label="Init command output"><span class="text-accent">&gt;</span> /ship-it:init
 
   detect &middot; interview &middot; write config
   validate &middot; verify-init <span class="text-accent">OK</span></pre>
         </div>
         <!-- step 3 -->
-        <div class="grid grid-cols-1 gap-5 bg-zinc-900/30 p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
+        <div class="grid grid-cols-1 gap-5 bg-transparent p-7 md:grid-cols-[auto_1fr_1.2fr] md:items-center md:gap-10 md:p-9">
           <span class="font-mono text-4xl font-light text-accent">03</span>
           <div>
-            <h3 class="text-lg font-medium text-zinc-100">Ship</h3>
-            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-zinc-400">Run a batch, or any stage skill standalone. Review at the checkpoint, then approve. Each PR carries a followable QA checklist.</p>
+            <h3 class="text-2xl font-bold tracking-tight text-heading">ship</h3>
+            <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-body">Run a batch, or any stage skill standalone. Review at the checkpoint, then approve. Each PR carries a followable QA checklist.</p>
           </div>
-          <pre class="overflow-x-auto rounded-lg border border-accent/20 bg-accent/[0.05] p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300"><span class="text-accent">&gt;</span> ship all the todo issues
+          <pre class="overflow-x-auto rounded-lg border border-accent/20 bg-accent/[0.05] p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300" role="region" aria-label="Ship command example"><span class="text-accent">&gt;</span> ship all the todo issues
 
-  <span class="text-zinc-500">// after merge</span>
+  <span class="text-muted">// after merge</span>
 <span class="text-accent">$</span> scripts/cleanup-worktrees.sh --all-merged</pre>
         </div>
       </div>
 
-      <p class="reveal mt-8 max-w-[60ch] text-sm leading-relaxed text-zinc-500">For development, point Claude at the live repo with <span class="font-mono text-zinc-300">--plugin-dir</span> to skip the install dance entirely.</p>
+      <p class="reveal mt-8 max-w-[60ch] text-sm leading-relaxed text-muted">For development, point Claude at the live repo with <span class="font-mono text-zinc-300">--plugin-dir</span> to skip the install dance entirely.</p>
     </section>
 
     <!-- ===================== MENTAL MODEL ===================== -->
-    <section id="model" class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section id="model" class="mx-auto max-w-[1400px] px-5 py-28 md:py-40">
       <div class="grid grid-cols-1 gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div class="reveal lg:sticky lg:top-28 lg:self-start">
-          <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">The mental model</p>
-          <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">Three layers, kept strictly apart</h2>
-          <p class="mt-5 max-w-[52ch] leading-relaxed text-zinc-400">
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">three layers, kept strictly apart</h2>
+          <p class="mt-5 max-w-[52ch] leading-relaxed text-body">
             The engine is project-agnostic. A generic orchestrator drives reusable stage skills over a universal currency, the
             <span class="text-zinc-200">work-unit</span>. Everything project-specific lives in one config file, produced by <span class="font-mono text-zinc-200">init</span>. The flow never hard-codes a stack.
           </p>
           <dl class="mt-8 space-y-4 text-sm">
-            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">01</dt><dd><span class="text-zinc-200">Orchestrator</span> <span class="text-zinc-500">&middot; ship-issues. Lane grouping, the concurrent fan-out, worktrees, post-PR watchers.</span></dd></div>
-            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">02</dt><dd><span class="text-zinc-200">Stage skills</span> <span class="text-zinc-500">&middot; each operates on one work-unit and is callable on its own.</span></dd></div>
-            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">03</dt><dd><span class="text-zinc-200">Per-project config</span> <span class="text-zinc-500">&middot; values, commands, and adapter refs at .claude/ship-it/config.json.</span></dd></div>
+            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">01</dt><dd><span class="text-zinc-200">Orchestrator</span> <span class="text-muted">&middot; ship-issues. Lane grouping, the concurrent fan-out, worktrees, post-PR watchers.</span></dd></div>
+            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">02</dt><dd><span class="text-zinc-200">Stage skills</span> <span class="text-muted">&middot; each operates on one work-unit and is callable on its own.</span></dd></div>
+            <div class="flex gap-3"><dt class="mt-0.5 font-mono text-accent">03</dt><dd><span class="text-zinc-200">Per-project config</span> <span class="text-muted">&middot; values, commands, and adapter refs at .claude/ship-it/config.json.</span></dd></div>
           </dl>
         </div>
 
         <!-- Diagram 1: architecture -->
         <div class="reveal">
-          <div class="diagram rounded-2xl border border-white/10 bg-zinc-900/30 p-5 sm:p-8" data-draw>
+          <div class="diagram rounded-2xl border border-border-subtle bg-surface/30 p-5 sm:p-8" data-draw>
             <svg viewBox="0 0 520 420" class="w-full" fill="none" font-family="'Roboto Mono', monospace">
               <!-- layer 1 -->
               <g class="node">
@@ -288,18 +303,17 @@ claude plugin install ship-it@pricklywiggles</pre>
               </g>
             </svg>
           </div>
-          <p class="mt-3 font-mono text-[11px] text-zinc-600">A piece is concurrent when it is per-work-unit; serial only when it touches shared state.</p>
+          <p class="mt-3 font-mono text-[11px] text-disabled">A piece is concurrent when it is per-work-unit; serial only when it touches shared state.</p>
         </div>
       </div>
     </section>
 
     <!-- ===================== PIPELINE ===================== -->
-    <section id="pipeline" class="relative border-y border-white/5 bg-zinc-900/20">
-      <div class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section id="pipeline" class="relative border-y border-accent/[0.06] bg-surface/15">
+      <div class="mx-auto max-w-[1400px] px-5 py-20 md:py-28">
         <div class="reveal max-w-[60ch]">
-          <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">The ship-issues flow</p>
-          <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">Eight phases, one prompt</h2>
-          <p class="mt-5 leading-relaxed text-zinc-400">All human interaction is front-loaded into <span class="font-mono text-zinc-200">init</span> and the Phase 3 checkpoint, so the workers run non-interactively and parallelize.</p>
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">eight phases, one prompt</h2>
+          <p class="mt-5 leading-relaxed text-body">All human interaction is front-loaded into <span class="font-mono text-zinc-200">init</span> and the Phase 3 checkpoint, so the workers run non-interactively and parallelize.</p>
         </div>
 
         <!-- Diagram 2: 8-phase rail -->
@@ -321,16 +335,19 @@ claude plugin install ship-it@pricklywiggles</pre>
 
         <!-- per-work-unit pipeline -->
         <div class="reveal mt-16">
-          <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500">Inside "run batch", per work-unit</p>
           <div class="mt-5 flex flex-wrap items-center gap-2 font-mono text-xs" data-stagger>
-            <span class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-200">fix-one-issue</span>
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-600" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-300">comment-cleanup <span class="text-zinc-600">if comments</span></span>
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-600" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-200">review-and-address</span>
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-600" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-300">author-reconcile docs <span class="text-zinc-600">rides the PR</span></span>
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-zinc-600" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-200">fix-one-issue</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-300">comment-cleanup <span class="text-disabled">if comments</span></span>
+           <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-200">fix-one-issue</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-300">comment-cleanup <span class="text-disabled">if comments</span></span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-200">review-and-address</span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="rounded-lg border border-border-subtle bg-white/[0.03] px-3 py-2 text-zinc-300">author-reconcile docs <span class="text-disabled">rides the PR</span></span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-disabled" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span class="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-accent">open-pr</span>
           </div>
         </div>
@@ -338,105 +355,155 @@ claude plugin install ship-it@pricklywiggles</pre>
     </section>
 
     <!-- ===================== CORE CONCEPTS (BENTO) ===================== -->
-    <section class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section class="mx-auto max-w-[1400px] px-5 py-28 md:py-40">
       <div class="reveal max-w-[60ch]">
-        <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">Core concepts</p>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">The vocabulary of a run</h2>
+        <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">the vocabulary of a run</h2>
+        <p class="mt-5 max-w-[54ch] leading-relaxed text-body">Six recurring nouns. A run is just these, arranged: work-units fanned into concurrent lanes, each in its own worktree, gated once before anything ships.</p>
       </div>
 
       <div class="mt-12 grid grid-cols-1 gap-4 md:grid-cols-6" data-stagger>
-        <!-- work-unit (wide) -->
-        <div class="group rounded-2xl border border-white/10 bg-zinc-900/30 p-7 md:col-span-3">
-          <h3 class="font-mono text-sm text-zinc-100">work-unit</h3>
-          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-zinc-400">The universal currency. Every stage operates on one, wherever it came from.</p>
-          <pre class="mt-4 overflow-x-auto rounded-lg border border-white/5 bg-zinc-950/60 p-3 font-mono text-[11px] leading-relaxed text-zinc-400"><span class="text-zinc-600">{</span> id, title, desc, branch, base,
-  worktree, url, prNumber, <span class="text-accent">plan</span> <span class="text-zinc-600">}</span></pre>
+        <!-- work-unit -->
+        <div class="group rounded-2xl border border-border-subtle bg-surface/30 p-7 transition-colors duration-300 hover:border-white/[0.14] md:col-span-3">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-mono text-base tracking-tight text-heading">work-unit</h3>
+            <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the currency</span>
+          </div>
+          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">One shape every stage speaks, wherever the work came from. It rides through implement, review, and PR unchanged.</p>
+          <pre class="mt-4 overflow-x-auto rounded-lg border border-white/5 bg-zinc-950/60 p-3 font-mono text-[11px] leading-relaxed text-body"><span class="text-disabled">{</span> id, title, desc, branch, base,
+  worktree, url, prNumber, <span class="text-accent">plan</span> <span class="text-disabled">}</span></pre>
         </div>
 
-        <!-- lanes (tall, with mini diagram) -->
-        <div class="diagram group rounded-2xl border border-white/10 bg-zinc-900/30 p-7 md:col-span-3 md:row-span-2" data-draw>
-          <h3 class="font-mono text-sm text-zinc-100">lanes</h3>
-          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-zinc-400">Two work-units collide only if they edit the same file. Independent ones run as concurrent lanes off main; overlapping ones stack on dependent branches inside one lane. Capped by <span class="font-mono text-zinc-300">maxLanes</span> (default 4).</p>
-          <svg viewBox="0 0 460 220" class="mt-5 w-full" fill="none" font-family="'Roboto Mono', monospace">
-            <text x="10" y="20" fill="#52525b" font-size="10">concurrent</text>
-            <path class="draw" d="M30 50 H430" stroke="#27272a" stroke-width="2"/>
-            <g class="node"><circle cx="120" cy="50" r="7" fill="oklch(0.76 0.12 168)"/><text x="120" y="38" fill="#a1a1aa" font-size="9" text-anchor="middle">FRA-144</text></g>
-            <path class="draw" d="M30 86 H430" stroke="#27272a" stroke-width="2"/>
-            <g class="node"><circle cx="300" cy="86" r="7" fill="oklch(0.76 0.12 168)"/><text x="300" y="74" fill="#a1a1aa" font-size="9" text-anchor="middle">FRA-145</text></g>
-            <text x="10" y="140" fill="#52525b" font-size="10">stacked</text>
-            <path class="draw" d="M30 170 H430" stroke="#27272a" stroke-width="2"/>
-            <path class="draw" d="M170 170 C210 170 210 200 250 200 H430" stroke="oklch(0.76 0.12 168)" stroke-width="2" stroke-opacity="0.6"/>
-            <g class="node"><circle cx="170" cy="170" r="7" fill="oklch(0.76 0.12 168)"/><text x="170" y="158" fill="#a1a1aa" font-size="9" text-anchor="middle">parent</text></g>
-            <g class="node"><circle cx="320" cy="200" r="7" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="330" y="200" fill="#a1a1aa" font-size="9">child, off parent</text></g>
+        <!-- lanes (tall, with diagram) -->
+        <div class="diagram group flex flex-col rounded-2xl border border-border-subtle bg-surface/30 p-7 transition-colors duration-300 hover:border-white/[0.14] md:col-span-3 md:row-span-2" data-draw>
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-mono text-base tracking-tight text-heading">lanes</h3>
+            <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the concurrency</span>
+          </div>
+          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">Two work-units collide only if they touch the same file. Independent ones run as concurrent lanes off main; overlapping ones stack on dependent branches inside one lane. Capped by <span class="font-mono text-zinc-300">maxLanes</span> (default 4).</p>
+          <svg viewBox="0 0 460 240" class="mt-6 w-full md:mt-auto md:pt-6" fill="none" font-family="'Roboto Mono', monospace">
+            <text x="6" y="16" fill="#71717a" font-size="10" letter-spacing="0.08em">concurrent, off main</text>
+            <path class="draw" d="M26 44 H300" stroke="#27272a" stroke-width="2"/>
+            <g class="node"><circle cx="150" cy="44" r="6.5" fill="oklch(0.72 0.16 168)"/><text x="150" y="32" fill="#a1a1aa" font-size="9" text-anchor="middle">FRA-144</text></g>
+            <path class="draw" d="M26 80 H398" stroke="#27272a" stroke-width="2"/>
+            <g class="node"><circle cx="300" cy="80" r="6.5" fill="oklch(0.72 0.16 168)"/><text x="300" y="68" fill="#a1a1aa" font-size="9" text-anchor="middle">FRA-145</text></g>
+            <path d="M26 116 H434" stroke="#18181b" stroke-width="1" stroke-dasharray="2 6"/>
+            <text x="6" y="150" fill="#71717a" font-size="10" letter-spacing="0.08em">stacked, one lane</text>
+            <path class="draw" d="M26 180 H214" stroke="#27272a" stroke-width="2"/>
+            <path class="draw" d="M150 180 C196 180 196 212 242 212 H424" stroke="oklch(0.72 0.16 168)" stroke-width="2" stroke-opacity="0.55"/>
+            <g class="node"><circle cx="150" cy="180" r="6.5" fill="oklch(0.72 0.16 168)"/><text x="150" y="168" fill="#a1a1aa" font-size="9" text-anchor="middle">parent</text></g>
+            <g class="node"><circle cx="300" cy="212" r="6.5" fill="#0b0b0d" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="314" y="216" fill="#a1a1aa" font-size="9">child, off parent</text></g>
           </svg>
         </div>
 
         <!-- worktrees -->
-        <div class="group rounded-2xl border border-white/10 bg-zinc-900/30 p-7 md:col-span-3">
-          <h3 class="font-mono text-sm text-zinc-100">worktrees</h3>
-          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-zinc-400">Each lane works in its own git worktree under <span class="font-mono text-zinc-300">.claude/worktrees</span>, made runnable by a project-owned <span class="font-mono text-zinc-300">prepare</span> hook. The main checkout is never touched. Left runnable afterward for your QA.</p>
+        <div class="group rounded-2xl border border-border-subtle bg-surface/30 p-7 transition-colors duration-300 hover:border-white/[0.14] md:col-span-3">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-mono text-base tracking-tight text-heading">worktrees</h3>
+            <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the isolation</span>
+          </div>
+          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">Each lane runs in its own git worktree, made runnable by a project-owned <span class="font-mono text-zinc-300">prepare</span> hook. The main checkout is never touched, and each tree is left runnable afterward for your QA.</p>
+          <div class="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-1.5 font-mono text-[11px] text-muted">
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0 text-accent-dim" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            .claude/worktrees/<span class="text-body">&lt;id&gt;</span>
+          </div>
         </div>
 
-        <!-- checkpoint -->
-        <div class="group rounded-2xl border border-accent/20 bg-accent/[0.04] p-7 md:col-span-3">
-          <h3 class="font-mono text-sm text-accent">the Phase 3 checkpoint</h3>
-          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-zinc-400">The single human gate. You see the plans and lanes, give feedback, or approve. Nothing is pushed before it. Plans are posted to the tracker as proposals you can review there too.</p>
-        </div>
-
-        <!-- sources -->
-        <div class="group rounded-2xl border border-white/10 bg-zinc-900/30 p-7 md:col-span-4">
-          <h3 class="font-mono text-sm text-zinc-100">sources</h3>
-          <p class="mt-2 text-sm leading-relaxed text-zinc-400">A source turns a request into work-units.</p>
-          <div class="mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-300">linear</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-300">github-issues</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-300">custom resolver</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-500">working-tree</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-500">branch</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-500">pr</span>
-            <span class="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-zinc-500">describe</span>
+        <!-- checkpoint (the featured human gate) -->
+        <div class="group relative overflow-hidden rounded-2xl border border-accent/25 bg-accent/[0.05] p-7 transition-colors duration-300 hover:border-accent/40 md:col-span-3">
+          <div class="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-accent/10 blur-2xl"></div>
+          <div class="relative flex items-baseline justify-between gap-4">
+            <h3 class="font-mono text-base tracking-tight text-accent">the Phase 3 checkpoint</h3>
+            <span class="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-accent-dim">
+              <span class="relative flex h-1.5 w-1.5"><span class="pulse-ring absolute inline-flex h-full w-full rounded-full bg-accent"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent"></span></span>
+              human gate
+            </span>
+          </div>
+          <p class="relative mt-2 max-w-[46ch] text-sm leading-relaxed text-body">The one place the run waits for you. Read the plans and lanes, posted to the tracker as proposals, then steer. Nothing is pushed until you approve.</p>
+          <div class="relative mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
+            <span class="rounded-md border border-accent/25 bg-accent/10 px-2.5 py-1 text-accent">approve</span>
+            <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">give feedback</span>
+            <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">nothing pushed yet</span>
           </div>
         </div>
 
         <!-- safety -->
-        <div class="group rounded-2xl border border-white/10 bg-zinc-900/30 p-7 md:col-span-2">
-          <h3 class="font-mono text-sm text-zinc-100">safety rails</h3>
-          <p class="mt-2 text-sm leading-relaxed text-zinc-400">Hard constraints carried into every worker prompt: code-only verify, no personal data, house rules.</p>
+        <div class="group rounded-2xl border border-border-subtle bg-surface/30 p-7 transition-colors duration-300 hover:border-white/[0.14] md:col-span-3">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-mono text-base tracking-tight text-heading">safety rails</h3>
+            <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the constraints</span>
+          </div>
+          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">Hard constraints carried verbatim into every worker prompt, so a parallel run cannot drift past them.</p>
+          <div class="mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
+            <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">code-only verify</span>
+            <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">no personal data</span>
+            <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">house rules</span>
+          </div>
+        </div>
+
+        <!-- sources (full-width band) -->
+        <div class="group rounded-2xl border border-border-subtle bg-surface/30 p-7 transition-colors duration-300 hover:border-white/[0.14] md:col-span-6">
+          <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-12">
+            <div class="md:max-w-[34ch]">
+              <div class="flex items-baseline justify-between gap-4">
+                <h3 class="font-mono text-base tracking-tight text-heading">sources</h3>
+                <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the inputs</span>
+              </div>
+              <p class="mt-2 text-sm leading-relaxed text-body">Where a run gets its work-units. A tracker for a batch, or local state for the change in front of you.</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2 md:flex-1">
+              <div>
+                <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">tracker</p>
+                <div class="mt-2.5 flex flex-wrap gap-2 font-mono text-[11px]">
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">linear</span>
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">github-issues</span>
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-zinc-300">custom resolver</span>
+                </div>
+              </div>
+              <div>
+                <p class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">local</p>
+                <div class="mt-2.5 flex flex-wrap gap-2 font-mono text-[11px]">
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">working-tree</span>
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">branch</span>
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">pr</span>
+                  <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">describe</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ===================== PLANNING ===================== -->
-    <section id="planning" class="relative overflow-hidden border-y border-white/5 bg-zinc-900/20">
+    <section id="planning" class="relative overflow-hidden border-y border-accent/[0.06] bg-surface/15">
       <div class="aurora pointer-events-none absolute -right-40 top-10 -z-10 h-[30rem] w-[30rem] rounded-full bg-accent/[0.06]"></div>
-      <div class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+      <div class="mx-auto max-w-[1400px] px-5 py-28 md:py-40">
         <div class="grid grid-cols-1 gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
           <div class="reveal">
-            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">The 0.2.0 headline</p>
-            <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">A deliberate planning phase</h2>
-            <p class="mt-5 max-w-[56ch] leading-relaxed text-zinc-400">
+            <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">a deliberate planning phase</h2>
+            <p class="mt-5 max-w-[56ch] leading-relaxed text-body">
               Before any code, each work-unit gets a comprehensive plan, written by the built-in <span class="text-zinc-200">Plan agent</span> running <span class="font-mono text-zinc-200">plan-one-issue</span> concurrently. The plan is the spec the implement stage builds against, and it sharpens the lane grouping.
             </p>
 
             <div class="mt-8 space-y-5">
-              <div class="rounded-xl border border-white/10 bg-zinc-950/40 p-5">
-                <h3 class="text-sm font-medium text-zinc-100">Comprehensive, not a sketch</h3>
-                <p class="mt-1.5 text-sm leading-relaxed text-zinc-400">Context, approach with alternatives, per-file changes and reuse, key decisions, edge cases, verification, risks. Depth scales: <span class="font-mono text-zinc-300">light</span> / <span class="font-mono text-accent">adaptive</span> / <span class="font-mono text-zinc-300">full</span>.</p>
+              <div class="rounded-xl border border-border-subtle bg-zinc-950/40 p-5">
+                <h3 class="text-base font-semibold tracking-tight text-heading">comprehensive, not a sketch</h3>
+                <p class="mt-1.5 text-sm leading-relaxed text-body">Context, approach with alternatives, per-file changes and reuse, key decisions, edge cases, verification, risks. Depth scales: <span class="font-mono text-zinc-300">light</span> / <span class="font-mono text-accent">adaptive</span> / <span class="font-mono text-zinc-300">full</span>.</p>
               </div>
-              <div class="rounded-xl border border-white/10 bg-zinc-950/40 p-5">
-                <h3 class="text-sm font-medium text-zinc-100">Propose, review, update on the tracker</h3>
-                <p class="mt-1.5 text-sm leading-relaxed text-zinc-400">Each plan is posted to its issue as a proposal (idempotent, marker-keyed), updated in place on your feedback, then finalized as approved. Review it in the terminal or on Linear.</p>
+              <div class="rounded-xl border border-border-subtle bg-zinc-950/40 p-5">
+                <h3 class="text-base font-semibold tracking-tight text-heading">propose, review, update on the tracker</h3>
+                <p class="mt-1.5 text-sm leading-relaxed text-body">Each plan is posted to its issue as a proposal (idempotent, marker-keyed), updated in place on your feedback, then finalized as approved. Review it in the terminal or on Linear.</p>
               </div>
               <div class="rounded-xl border border-accent/20 bg-accent/[0.04] p-5">
-                <h3 class="text-sm font-medium text-accent">Verify every API against the installed version</h3>
-                <p class="mt-1.5 text-sm leading-relaxed text-zinc-400">No planning or coding from training-data memory. Package and service-shape calls are confirmed against what the project actually has, checking <span class="font-mono text-zinc-300">node_modules</span>, <span class="font-mono text-zinc-300">~/.cargo/registry/src</span>, <span class="font-mono text-zinc-300">site-packages</span>, and <span class="font-mono text-zinc-300">context7</span>. Unconfirmable calls are flagged, not asserted.</p>
+                <h3 class="text-base font-semibold tracking-tight text-accent">verify every API against the installed version</h3>
+                <p class="mt-1.5 text-sm leading-relaxed text-body">No planning or coding from training-data memory. Package and service-shape calls are confirmed against what the project actually has, checking <span class="font-mono text-zinc-300">node_modules</span>, <span class="font-mono text-zinc-300">~/.cargo/registry/src</span>, <span class="font-mono text-zinc-300">site-packages</span>, and <span class="font-mono text-zinc-300">context7</span>. Unconfirmable calls are flagged, not asserted.</p>
               </div>
             </div>
           </div>
 
           <!-- Diagram 4: planning loop -->
           <div class="reveal lg:sticky lg:top-28 lg:self-start">
-            <div class="diagram rounded-2xl border border-white/10 bg-zinc-900/30 p-5 sm:p-8" data-draw>
+            <div class="diagram rounded-2xl border border-border-subtle bg-surface/30 p-5 sm:p-8" data-draw>
               <svg viewBox="0 0 420 440" class="w-full" fill="none" font-family="'Roboto Mono', monospace">
                 <g class="node"><rect x="110" y="20" width="200" height="58" rx="14" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-opacity="0.5"/><text x="210" y="46" fill="#e4e4e7" font-size="12" text-anchor="middle">Plan agent</text><text x="210" y="64" fill="#71717a" font-size="9.5" text-anchor="middle">reads real code + docs</text></g>
                 <path class="draw" d="M210 78 V120" stroke="#3f3f46" stroke-width="1.5"/>
@@ -458,84 +525,82 @@ claude plugin install ship-it@pricklywiggles</pre>
     </section>
 
     <!-- ===================== SKILLS ===================== -->
-    <section id="skills" class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
-      <div class="reveal max-w-[62ch]">
-        <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">The skills</p>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">One orchestrator, six stages, one setup</h2>
-        <p class="mt-5 leading-relaxed text-zinc-400">Every stage skill is callable on its own. Run just the review, just the CI fix, or push the current diff through the whole flow without a tracker.</p>
+    <section id="skills" class="mx-auto max-w-[1400px] px-5 py-16 md:py-24">
+     <div class="reveal max-w-[62ch]">
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">one orchestrator, six stages, one setup</h2>
+        <p class="mt-5 leading-relaxed text-body">Every stage skill is callable on its own. Run just the review, just the CI fix, or push the current diff through the whole flow without a tracker.</p>
       </div>
 
-      <div class="mt-14 divide-y divide-white/10 border-y border-white/10" data-stagger>
+      <div class="mt-14 divide-y divide-accent/[0.06] border-y border-border-subtle" data-stagger>
         <!-- row template: number | name | how | trigger -->
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
           <span class="font-mono text-xs text-accent">orchestrator</span>
-          <div><h3 class="font-mono text-base text-zinc-100">ship-issues</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Drives the whole batch: resolve, plan, lanes, checkpoint, the per-unit pipeline, docs, watchers. <span class="text-zinc-500">Trigger: "ship all the todo issues", "knock out FRA-111 through 120".</span></p>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">ship-issues</h3></div>
+          <p class="text-sm leading-relaxed text-body">Drives the whole batch: resolve, plan, lanes, checkpoint, the per-unit pipeline, docs, watchers. <span class="text-muted">Trigger: "ship all the todo issues", "knock out FRA-111 through 120".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
           <span class="font-mono text-xs text-accent">setup</span>
-          <div><h3 class="font-mono text-base text-zinc-100">init</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Detect-first, ask-second. Detects the package manager, verify command, CI, tracker, doc tools, and reviewers; asks only the gaps; writes and self-verifies the config. <span class="text-zinc-500">Trigger: "set up ship-it here".</span></p>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">init</h3></div>
+          <p class="text-sm leading-relaxed text-body">Detect-first, ask-second. Detects the package manager, verify command, CI, tracker, doc tools, and reviewers; asks only the gaps; writes and self-verifies the config. <span class="text-muted">Trigger: "set up ship-it here".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">plan-one-issue</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">A comprehensive, read-only plan grounded in the real code, with verified APIs. <span class="text-zinc-500">Trigger: "plan this issue", "draft a plan for FRA-123".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">plan-one-issue</h3></div>
+          <p class="text-sm leading-relaxed text-body">A comprehensive, read-only plan grounded in the real code, with verified APIs. <span class="text-muted">Trigger: "plan this issue", "draft a plan for FRA-123".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">fix-one-issue</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Implements the smallest correct change against the plan, verifies, commits. Guards the sync-to-async signature ripple. <span class="text-zinc-500">Trigger: "implement FRA-123 and verify it".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">fix-one-issue</h3></div>
+          <p class="text-sm leading-relaxed text-body">Implements the smallest correct change against the plan, verifies, commits. Guards the sync-to-async signature ripple. <span class="text-muted">Trigger: "implement FRA-123 and verify it".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">comment-cleanup</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Audits the diff's comments: keeps the non-obvious why, drops narration. Runs only if comments changed. <span class="text-zinc-500">Trigger: "clean up the comments in this change".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">comment-cleanup</h3></div>
+          <p class="text-sm leading-relaxed text-body">Audits the diff's comments: keeps the non-obvious why, drops narration. Runs only if comments changed. <span class="text-muted">Trigger: "clean up the comments in this change".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">review-and-address</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Fans out your configured reviewers over the diff in parallel, merges findings, applies the warranted ones. <span class="text-zinc-500">Trigger: "review my diff with main and fix what matters".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">review-and-address</h3></div>
+          <p class="text-sm leading-relaxed text-body">Fans out your configured reviewers over the diff in parallel, merges findings, applies the warranted ones. <span class="text-muted">Trigger: "review my diff with main and fix what matters".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">open-pr</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Pushes and opens the PR with a two-part QA-ready body: automated checks run, plus a followable checklist with exact commands. <span class="text-zinc-500">Trigger: "open a PR for my branch".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">open-pr</h3></div>
+          <p class="text-sm leading-relaxed text-body">Pushes and opens the PR with a two-part QA-ready body: automated checks run, plus a followable checklist with exact commands. <span class="text-muted">Trigger: "open a PR for my branch".</span></p>
         </article>
         <article class="grid grid-cols-1 gap-3 py-7 md:grid-cols-[auto_1fr_1.4fr] md:items-baseline md:gap-8">
-          <span class="font-mono text-xs text-zinc-600">stage</span>
-          <div><h3 class="font-mono text-base text-zinc-100">ci-fix</h3></div>
-          <p class="text-sm leading-relaxed text-zinc-400">Watches a PR's CI and fixes failures, bounded and cause-only. <span class="text-zinc-500">Trigger: "watch and fix the CI on this PR".</span></p>
+          <span class="font-mono text-xs text-disabled">stage</span>
+          <div><h3 class="font-mono text-lg tracking-tight text-heading">ci-fix</h3></div>
+          <p class="text-sm leading-relaxed text-body">Watches a PR's CI and fixes failures, bounded and cause-only. <span class="text-muted">Trigger: "watch and fix the CI on this PR".</span></p>
         </article>
       </div>
     </section>
 
     <!-- ===================== DOC JOBS ===================== -->
-    <section class="border-y border-white/5 bg-zinc-900/20">
-      <div class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section class="border-y border-accent/[0.06] bg-surface/15">
+      <div class="mx-auto max-w-[1400px] px-5 py-20 md:py-32">
         <div class="reveal max-w-[60ch]">
-          <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">Living docs</p>
-          <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">Docs kept current, three ways</h2>
-          <p class="mt-5 leading-relaxed text-zinc-400">Each configured doc job runs in parallel and is one of three mechanics. Built-ins for OpenSpec, graphify, and impeccable; <span class="font-mono text-zinc-200">init</span> generates a job for any other doc.</p>
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">docs kept current, three ways</h2>
+          <p class="mt-5 leading-relaxed text-body">Each configured doc job runs in parallel and is one of three mechanics. Built-ins for OpenSpec, graphify, and impeccable; <span class="font-mono text-zinc-200">init</span> generates a job for any other doc.</p>
         </div>
 
         <div class="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-3" data-stagger>
-          <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-7">
-            <p class="font-mono text-[11px] uppercase tracking-wider text-zinc-500">mechanic 01</p>
-            <h3 class="mt-2 font-mono text-base text-zinc-100">regenerate</h3>
-            <p class="mt-3 text-sm leading-relaxed text-zinc-400">Re-derive the doc from merged code, no authoring. Runs post-merge. If the target is gitignored (e.g. <span class="font-mono text-zinc-300">graphify-out/</span>) it is just a local refresh, no PR.</p>
+          <div class="rounded-2xl border border-border-subtle bg-surface/40 p-7">
+            <p class="font-mono text-[11px] uppercase tracking-wider text-muted">mechanic 01</p>
+            <h3 class="mt-2 font-mono text-lg tracking-tight text-heading">regenerate</h3>
+            <p class="mt-3 text-sm leading-relaxed text-body">Re-derive the doc from merged code, no authoring. Runs post-merge. If the target is gitignored (e.g. <span class="font-mono text-zinc-300">graphify-out/</span>) it is just a local refresh, no PR.</p>
             <p class="mt-4 font-mono text-[11px] text-accent-dim">built-in: graphify</p>
           </div>
           <div class="rounded-2xl border border-accent/20 bg-accent/[0.04] p-7">
             <p class="font-mono text-[11px] uppercase tracking-wider text-accent-dim">mechanic 02</p>
-            <h3 class="mt-2 font-mono text-base text-accent">author-reconcile</h3>
-            <p class="mt-3 text-sm leading-relaxed text-zinc-400">Author the artifact on-branch before open-pr so it rides the same PR; archive into canonical docs after merge. The spec ships with the code.</p>
+            <h3 class="mt-2 font-mono text-lg tracking-tight text-accent">author-reconcile</h3>
+            <p class="mt-3 text-sm leading-relaxed text-body">Author the artifact on-branch before open-pr so it rides the same PR; archive into canonical docs after merge. The spec ships with the code.</p>
             <p class="mt-4 font-mono text-[11px] text-accent-dim">built-in: openspec</p>
           </div>
-          <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-7">
-            <p class="font-mono text-[11px] uppercase tracking-wider text-zinc-500">mechanic 03</p>
-            <h3 class="mt-2 font-mono text-base text-zinc-100">curate-serial</h3>
-            <p class="mt-3 text-sm leading-relaxed text-zinc-400">Update a shared prose doc once. One triggering work-unit, it rides that PR; several, one consolidated pass on a docs branch.</p>
+          <div class="rounded-2xl border border-border-subtle bg-surface/40 p-7">
+            <p class="font-mono text-[11px] uppercase tracking-wider text-muted">mechanic 03</p>
+            <h3 class="mt-2 font-mono text-lg tracking-tight text-heading">curate-serial</h3>
+            <p class="mt-3 text-sm leading-relaxed text-body">Update a shared prose doc once. One triggering work-unit, it rides that PR; several, one consolidated pass on a docs branch.</p>
             <p class="mt-4 font-mono text-[11px] text-accent-dim">built-in: impeccable &middot; DESIGN.md</p>
           </div>
         </div>
@@ -543,14 +608,13 @@ claude plugin install ship-it@pricklywiggles</pre>
     </section>
 
     <!-- ===================== CONFIG (cockpit) ===================== -->
-    <section id="config" class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section id="config" class="mx-auto max-w-[1400px] px-5 py-28 md:py-40">
       <div class="grid grid-cols-1 gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <div class="reveal lg:sticky lg:top-28 lg:self-start">
-          <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">Configuration</p>
-          <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">One file adapts the engine</h2>
-          <p class="mt-5 max-w-[48ch] leading-relaxed text-zinc-400">Produced by <span class="font-mono text-zinc-200">init</span>, validated against a schema. <span class="font-mono text-zinc-300">validate-config.sh</span> checks shape; <span class="font-mono text-zinc-300">verify-init.sh</span> checks the generated files on disk.</p>
-          <div class="mt-8 rounded-xl border border-white/10 bg-zinc-950/50 p-1">
-            <pre class="overflow-x-auto p-4 font-mono text-[11.5px] leading-relaxed text-zinc-400"><span class="text-zinc-600">// .claude/ship-it/config.json</span>
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">one file adapts the engine</h2>
+          <p class="mt-5 max-w-[48ch] leading-relaxed text-body">Produced by <span class="font-mono text-zinc-200">init</span>, validated against a schema. <span class="font-mono text-zinc-300">validate-config.sh</span> checks shape; <span class="font-mono text-zinc-300">verify-init.sh</span> checks the generated files on disk.</p>
+          <div class="mt-8 rounded-xl border border-border-subtle bg-zinc-950/50 p-1">
+            <pre class="overflow-x-auto p-4 font-mono text-[11.5px] leading-relaxed text-body" role="region" aria-label="Configuration file example"><span class="text-disabled">// .claude/ship-it/config.json</span>
 {
   <span class="text-accent">"source"</span>: { "tracker": {
     "type": <span class="text-zinc-200">"linear"</span>,
@@ -567,81 +631,74 @@ claude plugin install ship-it@pricklywiggles</pre>
 
         <!-- dense key reference -->
         <div class="reveal">
-          <div class="divide-y divide-white/10 border-y border-white/10 font-mono text-[12.5px]">
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">repo</span><span class="text-zinc-500">mainBranch &middot; mergeStrategy &middot; slug</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">source</span><span class="text-zinc-500">default + tracker (type, project, team, idPrefix)</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">houseRules</span><span class="text-zinc-500">text, or @AGENTS.md, injected into every worker</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">safety</span><span class="text-zinc-500">hard rails carried into every worker prompt</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">verify</span><span class="text-zinc-500">commands run in the worktree &middot; {changedFiles}</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">worktree</span><span class="text-zinc-500">enabled &middot; root &middot; prepare &middot; qaNotes</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">concurrency</span><span class="text-zinc-500">maxLanes &middot; the parallel lane cap</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 bg-accent/[0.04] py-3.5"><span class="text-accent">planning</span><span class="text-zinc-500">enabled &middot; postBack &middot; depth (light/adaptive/full)</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">review</span><span class="text-zinc-500">reviewers[] (name, kind, ref) &middot; applyWarranted</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">ci</span><span class="text-zinc-500">watch &middot; fixAttempts</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">docs</span><span class="text-zinc-500">enabled &middot; jobs[] (name, mechanic, ref, target, appliesWhen)</span></div>
-            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">prTemplate</span><span class="text-zinc-500">sections &middot; verification (two-part QA rule)</span></div>
+          <div class="divide-y divide-accent/[0.06] border-y border-border-subtle font-mono text-[12.5px]">
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">repo</span><span class="text-muted">mainBranch &middot; mergeStrategy &middot; slug</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">source</span><span class="text-muted">default + tracker (type, project, team, idPrefix)</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">houseRules</span><span class="text-muted">text, or @AGENTS.md, injected into every worker</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">safety</span><span class="text-muted">hard rails carried into every worker prompt</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">verify</span><span class="text-muted">commands run in the worktree &middot; {changedFiles}</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">worktree</span><span class="text-muted">enabled &middot; root &middot; prepare &middot; qaNotes</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">concurrency</span><span class="text-muted">maxLanes &middot; the parallel lane cap</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 bg-accent/[0.04] py-3.5"><span class="text-accent">planning</span><span class="text-muted">enabled &middot; postBack &middot; depth (light/adaptive/full)</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">review</span><span class="text-muted">reviewers[] (name, kind, ref) &middot; applyWarranted</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">ci</span><span class="text-muted">watch &middot; fixAttempts</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">docs</span><span class="text-muted">enabled &middot; jobs[] (name, mechanic, ref, target, appliesWhen)</span></div>
+            <div class="grid grid-cols-[10rem_1fr] gap-4 py-3.5"><span class="text-zinc-200">prTemplate</span><span class="text-muted">sections &middot; verification (two-part QA rule)</span></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ===================== USAGE ===================== -->
-    <section id="usage" class="border-y border-white/5 bg-zinc-900/20">
-      <div class="mx-auto max-w-[1400px] px-5 py-24 md:py-32">
+    <section id="usage" class="border-y border-accent/[0.06] bg-surface/15">
+      <div class="mx-auto max-w-[1400px] px-5 py-20 md:py-28">
         <div class="reveal max-w-[60ch]">
-          <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">In practice</p>
-          <h2 class="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 md:text-4xl">Say what you want shipped</h2>
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">say what you want shipped</h2>
         </div>
 
         <!-- kinetic marquee of triggers -->
         <div class="marquee-wrap relative mt-12 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_12%,#000_88%,transparent)]">
           <div class="flex w-max gap-3 marquee">
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">ship all the todo issues</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">knock out FRA-111 through 120</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">ship my current changes</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">ship all the todo issues</span>
             <span class="whitespace-nowrap rounded-full border border-accent/30 bg-accent/10 px-4 py-2 font-mono text-xs text-accent">plan this issue</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">review my diff with main</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">open a PR for my branch</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">fix the CI on this PR</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">review my diff with main</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">fix the CI on this PR</span>
             <!-- duplicate for seamless loop -->
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">ship all the todo issues</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">knock out FRA-111 through 120</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">ship my current changes</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">ship all the todo issues</span>
             <span class="whitespace-nowrap rounded-full border border-accent/30 bg-accent/10 px-4 py-2 font-mono text-xs text-accent">plan this issue</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">review my diff with main</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">open a PR for my branch</span>
-            <span class="whitespace-nowrap rounded-full border border-white/10 bg-zinc-900/50 px-4 py-2 font-mono text-xs text-zinc-300">fix the CI on this PR</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">review my diff with main</span>
+            <span class="whitespace-nowrap rounded-full border border-border-subtle bg-surface/50 px-4 py-2 font-mono text-xs text-body">fix the CI on this PR</span>
           </div>
         </div>
 
         <div class="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2" data-stagger>
-          <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-7">
-            <h3 class="text-sm font-medium text-zinc-100">Run tokens, anywhere in the trigger</h3>
+          <div class="rounded-2xl border border-border-subtle bg-surface/40 p-7">
+            <h3 class="text-sm font-medium text-heading">Run tokens, anywhere in the trigger</h3>
             <div class="mt-4 space-y-2.5 font-mono text-xs">
-              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">skip confirm</span><span class="text-zinc-500">no Phase 3 checkpoint, proceed straight through</span></p>
-              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">no docs</span><span class="text-zinc-500">turn off the whole documentation phase for this run</span></p>
-              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">skip plan</span><span class="text-zinc-500">fall back to a thin scope pass instead of full plans</span></p>
+              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">skip confirm</span><span class="text-muted">no Phase 3 checkpoint, proceed straight through</span></p>
+              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">no docs</span><span class="text-muted">turn off the whole documentation phase for this run</span></p>
+              <p class="flex gap-3"><span class="w-28 shrink-0 text-accent">skip plan</span><span class="text-muted">fall back to a thin scope pass instead of full plans</span></p>
             </div>
           </div>
-          <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-7">
-            <h3 class="text-sm font-medium text-zinc-100">The checkpoint conversation</h3>
-            <p class="mt-3 text-sm leading-relaxed text-zinc-400">At the gate you can reply <span class="font-mono text-accent">approve</span>, or give feedback on any plan ("use per-child attributes, not the deep value") and the proposal is revised in place before anything is built.</p>
+          <div class="rounded-2xl border border-border-subtle bg-surface/40 p-7">
+            <h3 class="text-sm font-medium text-heading">The checkpoint conversation</h3>
+            <p class="mt-3 text-sm leading-relaxed text-body">At the gate you can reply <span class="font-mono text-accent">approve</span>, or give feedback on any plan ("use per-child attributes, not the deep value") and the proposal is revised in place before anything is built.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ===================== FOOTER ===================== -->
-    <footer class="border-t border-white/10">
+    <footer class="border-t border-border-subtle">
       <div class="mx-auto flex max-w-[1400px] flex-col gap-6 px-5 py-12 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-2.5">
           <span class="grid h-7 w-7 place-items-center rounded-lg border border-accent/30 bg-accent/10">
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
           <span class="font-mono text-sm text-zinc-300">ship-it</span>
-          <span class="rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500">v0.2.0</span>
+          <span class="rounded-md border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-muted">v0.2.0</span>
         </div>
-        <p class="font-mono text-[11px] text-zinc-600">no em dashes &middot; code-only verification &middot; built by Gustavo Gallegos</p>
+        <p class="font-mono text-[11px] text-disabled">no em dashes &middot; code-only verification &middot; built by Gustavo Gallegos</p>
       </div>
     </footer>
 
@@ -659,14 +716,19 @@ claude plugin install ship-it@pricklywiggles</pre>
 
         if (prefersReduced) return;
 
-        // generic reveals
+        // generic reveals: bigger sweep, more dramatic
         gsap.utils.toArray('.reveal').forEach(function (el) {
-          gsap.from(el, { y: 26, opacity: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
+          gsap.from(el, { y: 36, opacity: 0, duration: 1.0, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%' } });
         });
 
-        // staggered groups
+        // staggered groups: longer stagger for choreography feel
         gsap.utils.toArray('[data-stagger]').forEach(function (group) {
-          gsap.from(group.children, { y: 22, opacity: 0, duration: 0.7, stagger: 0.07, ease: 'power3.out', scrollTrigger: { trigger: group, start: 'top 82%' } });
+          gsap.from(group.children, { y: 28, opacity: 0, duration: 0.8, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger: group, start: 'top 84%' } });
+        });
+
+        // hero-specific: parallax on terminal
+        gsap.utils.toArray('.terminal-parallax').forEach(function (el) {
+          gsap.to(el, { y: -20, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true } });
         });
 
         // SVG line-draw + node pop per diagram
@@ -693,5 +755,11 @@ claude plugin install ship-it@pricklywiggles</pre>
       else { window.addEventListener('load', function () { setTimeout(init, 60); }); }
     })();
   </script>
+
+  <noscript>
+    <style>
+      .reveal, [data-stagger] { opacity: 1 !important; transform: none !important; }
+    </style>
+  </noscript>
 </body>
 </html>

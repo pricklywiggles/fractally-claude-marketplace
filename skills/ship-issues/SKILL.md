@@ -59,13 +59,13 @@ Each result carries `docNeed` (the doc jobs it triggers) for Phase 6.
 **Skip this entire phase if a skip-docs token was in the trigger**, or if `config.docs.enabled` is false. Otherwise read `references/doc-jobs.md` for the mechanics and built-in jobs. After the Workflow returns, run the doc phase: for each job in `config.docs.jobs`, run the ones whose trigger (`appliesWhen`) matched a shipped work-unit, in parallel (each owns a different file). By mechanic:
 - **regenerate**: deferred to Phase 7 (post-merge), because the doc is re-derived from the merged code, not the pre-merge base. Do not run it here.
 - **author-reconcile**: the per-work-unit artifact was already authored on its branch in Phase 5 (it rides the PR); only the reconcile into canonical docs is deferred to post-merge (Phase 7).
-- **curate-serial**: update the shared prose doc once, serially (e.g. `impeccable` for DESIGN.md). If several work-units are visual, one consolidated pass.
+- **curate-serial**: update the shared prose doc once, serially (e.g. `impeccable` for DESIGN.md). If exactly one work-unit triggered it, commit it onto that work-unit's open PR (rides the PR, atomic doc + code); if several, one consolidated pass on a separate docs branch.
 
 Skip jobs with no matching change. Do not over-document.
 
 ## Phase 7: Post-PR watchers (in-session, optional)
 
-If `config.ci.watch`, spawn one **`ship-it:ci-fix`** background watcher per PR. If there are author-reconcile **or regenerate** doc jobs, launch the merge watcher `${CLAUDE_PLUGIN_ROOT}/scripts/watch-merges.sh --prs <csv> --reconcile "<cmd>"`, where `<cmd>` composes the post-merge work joined with `&&`: any author-reconcile reconcile (e.g. `${CLAUDE_PLUGIN_ROOT}/scripts/openspec-archive.sh <change-ids>`) and any regenerate command (e.g. `graphify update .`). It polls until the PRs are merged (timeout), then runs that command against the merged code (archiving specs, regenerating derived docs) and opens the batched docs PR. On timeout, it prints the manual command. See `references/doc-jobs.md`.
+If `config.ci.watch`, spawn one **`ship-it:ci-fix`** background watcher per PR. If the post-merge doc work produces a **tracked** change (an author-reconcile archive that edits committed specs, or a regenerate whose `target` is tracked), launch the merge watcher `${CLAUDE_PLUGIN_ROOT}/scripts/watch-merges.sh --prs <csv> --reconcile "<cmd>"`, where `<cmd>` composes the post-merge work joined with `&&`: any author-reconcile reconcile (e.g. `${CLAUDE_PLUGIN_ROOT}/scripts/openspec-archive.sh <change-ids>`) and any regenerate command (e.g. `graphify update .`). It polls until the PRs are merged (timeout), then runs that command against the merged code (archiving specs, regenerating derived docs) and opens the batched docs PR. On timeout, it prints the manual command. If the only post-merge job is a regenerate to a **gitignored** target (e.g. `graphify-out/`), there is nothing to PR, so skip the watcher and just note the manual `graphify update .` follow-up. See `references/doc-jobs.md`.
 
 ## Phase 8: Summarize
 

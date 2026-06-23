@@ -5,7 +5,7 @@
     "email": "goose@fractal.ly"
   },
   "metadata": {
-    "description": "Gustavo's Claude Code plugins",
+    "description": "Fractally's Claude Code plugins",
     "version": "0.2.0"
   },
   "plugins": [

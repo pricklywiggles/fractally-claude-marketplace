@@ -1,0 +1,19 @@
+{
+  "skill_name": "document-stack",
+  "evals": [
+    {
+      "id": 0,
+      "name": "from-lockfile",
+      "prompt": "I want my project's tech stack documented so both Claude and new contributors know what we're using and how to run things — put it in CLAUDE.md for the agents and in the README for people. The project is at PROJECT_DIR.",
+      "expected_output": "Documents from the existing .claude/stack-it/stack.yaml lockfile (versions match it exactly). Writes BOTH CLAUDE.md and README, each inside a <!-- stack-it:stack start/end --> managed block with the 'generated/overwritten' note. CLAUDE.md is agent-facing (tools+pinned versions, build/test/lint/run commands, Tailwind-v4-via-Vite-plugin and flat-ESLint conventions, caveats). README has a Tech Stack section + Getting Started with the real npm scripts.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "infer-from-codebase",
+      "prompt": "There's no stack file for this project — can you figure out what it's built with and document it? I want it in CLAUDE.md so agents know the stack, and a tech stack + getting started in the README. The project is at PROJECT_DIR.",
+      "expected_output": "No lockfile exists, so the stack is inferred from the codebase (pyproject.toml + imports): Python >=3.12, FastAPI 0.115.0, SQLModel 0.0.22, uvicorn 0.34.0, pytest 8.3.0, Ruff 0.8.0, managed with uv. Discloses that the stack was inferred (and ideally invites correction); does NOT fabricate a stack.yaml. Writes BOTH CLAUDE.md and README inside managed blocks, with real run commands (uv run pytest, ruff check, uvicorn app.main:app).",
+      "files": []
+    }
+  ]
+}

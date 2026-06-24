@@ -10,28 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-
-  <style type="text/tailwindcss">
-     @theme {
-       --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
-       --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
-       --color-accent: oklch(0.72 0.16 168);
-       --color-accent-dim: oklch(0.55 0.12 168);
-       --color-ink: oklch(0.16 0.005 285);
-       --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
-
-       /* teal-tinted neutrals: harmonize with accent instead of dead zinc */
-       --color-heading: oklch(0.94 0.01 168);
-       --color-body: oklch(0.72 0.01 168);
-       --color-muted: oklch(0.55 0.01 168);
-       --color-disabled: oklch(0.42 0.01 168);
-       --color-surface: oklch(0.17 0.01 168);
-       --color-border-subtle: oklch(1 0 0 / 0.08);
-     }
-   </style>
 
   <style>
     :root { color-scheme: dark; }
@@ -100,6 +81,8 @@
 
 <body class="grain bg-zinc-950 font-sans text-body antialiased selection:text-white">
 
+  <a href="#top" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:rounded-lg focus:border focus:border-accent/40 focus:bg-zinc-950 focus:px-4 focus:py-2 focus:font-mono focus:text-sm focus:text-accent">Skip to content</a>
+
   <!-- scroll progress -->
   <div class="fixed inset-x-0 top-0 z-[70] h-px bg-zinc-800">
     <div id="progress" class="h-full origin-left scale-x-0 bg-accent shadow-[0_0_12px_oklch(0.72_0.16_168/0.5)]"></div>
@@ -129,14 +112,14 @@
         <a href="#usage" class="hover:text-heading">Usage</a>
       </div>
       <div class="flex items-center gap-2 sm:gap-3">
-        <div class="hidden items-center gap-0.5 rounded-lg border border-border-subtle p-0.5 font-mono text-xs sm:flex" role="group" aria-label="Switch plugin">
+        <div class="flex items-center gap-0.5 rounded-lg border border-border-subtle p-0.5 font-mono text-xs" role="group" aria-label="Switch plugin">
           <a href="ship-it.html" aria-current="page" class="rounded-md bg-accent/10 px-2.5 py-1 text-accent">ship-it</a>
           <a href="stack-it.html" class="rounded-md px-2.5 py-1 text-muted hover:text-heading">stack-it</a>
         </div>
         <a href="https://github.com/pricklywiggles/fractally-claude-marketplace" target="_blank" rel="noopener noreferrer" aria-label="fractally on GitHub" class="tap grid h-8 w-8 place-items-center rounded-lg border border-border-subtle text-body hover:border-white/15 hover:text-heading">
           <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
         </a>
-        <a href="#start" class="tap rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-1.5 font-mono text-xs text-accent hover:bg-accent/20">get started</a>
+        <a href="#start" class="tap hidden rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-1.5 font-mono text-xs text-accent hover:bg-accent/20 sm:inline-flex">get started</a>
       </div>
     </nav>
   </header>
@@ -238,7 +221,7 @@
             <p class="mt-2 max-w-[40ch] text-sm leading-relaxed text-body">Add the marketplace, then enable ship-it. Refresh the marketplace clone first to get the latest version.</p>
           </div>
          <div class="group relative">
-            <button onclick="var t='claude plugin marketplace add pricklywiggles/fractally-claude-marketplace\\nclaude plugin install ship-it@fractally-claude-marketplace';navigator.clipboard.writeText(t);this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-accent\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><path d=\'M5 12l4 4L19 6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>';setTimeout(()=>{this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-muted\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.8\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg>'},2000)" class="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-surface text-muted opacity-0 transition-all hover:bg-zinc-800 hover:text-zinc-200 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 group-hover:opacity-100" aria-label="Copy commands to clipboard" title="Copy to clipboard">
+            <button onclick="var t='claude plugin marketplace add pricklywiggles/fractally-claude-marketplace\\nclaude plugin install ship-it@fractally-claude-marketplace';navigator.clipboard.writeText(t);this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-accent\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><path d=\'M5 12l4 4L19 6\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>';setTimeout(()=>{this.innerHTML='<svg viewBox=\'0 0 24 24\' class=\'h-4 w-4 text-muted\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.8\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\'/></svg>'},2000)" class="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-surface text-muted opacity-0 transition-all hover:bg-zinc-800 hover:text-zinc-200 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 group-hover:opacity-100" aria-label="Copy commands to clipboard" title="Copy to clipboard">
               <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             </button>
             <pre class="overflow-x-auto rounded-lg border border-border-subtle bg-zinc-950/60 p-4 font-mono text-[11.5px] leading-relaxed text-zinc-300" role="region" aria-label="Installation commands">claude plugin marketplace add pricklywiggles/fractally-claude-marketplace
@@ -296,11 +279,11 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
             <svg viewBox="0 0 520 420" class="w-full" fill="none" font-family="'Roboto Mono', monospace">
               <!-- layer 1 -->
               <g class="node">
-                <rect x="60" y="24" width="400" height="92" rx="16" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-opacity="0.5"/>
+                <rect x="60" y="24" width="400" height="92" rx="16" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-opacity="0.5"/>
                 <text x="84" y="56" fill="#e4e4e7" font-size="15" font-weight="600">ship-issues</text>
                 <text x="84" y="80" fill="#71717a" font-size="11">orchestrator</text>
                 <text x="84" y="98" fill="#52525b" font-size="10">lanes &middot; fan-out &middot; worktrees &middot; watchers</text>
-                <circle cx="430" cy="44" r="4" fill="oklch(0.76 0.12 168)"/>
+                <circle cx="430" cy="44" r="4" fill="oklch(0.72 0.16 168)"/>
               </g>
               <!-- connectors -->
               <path class="draw" d="M150 116 L150 168" stroke="#3f3f46" stroke-width="1.5"/>
@@ -341,16 +324,16 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
         <div class="diagram mt-14 overflow-x-auto pb-2" data-draw>
           <svg viewBox="0 0 1180 200" class="min-w-[940px]" fill="none" font-family="'Roboto Mono', monospace">
             <path class="draw" d="M70 60 H1110" stroke="#27272a" stroke-width="2"/>
-            <path class="draw" d="M70 60 H1110" stroke="oklch(0.76 0.12 168)" stroke-width="2" stroke-opacity="0.55"/>
+            <path class="draw" d="M70 60 H1110" stroke="oklch(0.72 0.16 168)" stroke-width="2" stroke-opacity="0.55"/>
             <!-- 8 nodes -->
-            <g class="node"><circle cx="70" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="70" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">resolve</text><text x="70" y="118" fill="#52525b" font-size="9" text-anchor="middle">sources</text></g>
-            <g class="node"><circle cx="218" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="218" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">plan</text><text x="218" y="118" fill="#52525b" font-size="9" text-anchor="middle">Plan agents</text></g>
-            <g class="node"><circle cx="366" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="366" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">lanes</text><text x="366" y="118" fill="#52525b" font-size="9" text-anchor="middle">overlap graph</text></g>
-            <g class="node"><circle cx="514" cy="60" r="11" fill="oklch(0.76 0.12 168)"/><text x="514" y="100" fill="#fff" font-size="11.5" text-anchor="middle" font-weight="600">checkpoint</text><text x="514" y="118" fill="#71717a" font-size="9" text-anchor="middle">you approve</text></g>
-            <g class="node"><circle cx="662" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="662" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">worktrees</text><text x="662" y="118" fill="#52525b" font-size="9" text-anchor="middle">lane heads</text></g>
-            <g class="node"><circle cx="810" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="810" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">run batch</text><text x="810" y="118" fill="#52525b" font-size="9" text-anchor="middle">implement to PR</text></g>
-            <g class="node"><circle cx="958" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="958" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">docs</text><text x="958" y="118" fill="#52525b" font-size="9" text-anchor="middle">living docs</text></g>
-            <g class="node"><circle cx="1110" cy="60" r="9" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-width="2"/><text x="1110" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">watchers</text><text x="1110" y="118" fill="#52525b" font-size="9" text-anchor="middle">CI &middot; merge</text></g>
+            <g class="node"><circle cx="70" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="70" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">resolve</text><text x="70" y="118" fill="#52525b" font-size="9" text-anchor="middle">sources</text></g>
+            <g class="node"><circle cx="218" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="218" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">plan</text><text x="218" y="118" fill="#52525b" font-size="9" text-anchor="middle">Plan agents</text></g>
+            <g class="node"><circle cx="366" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="366" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">lanes</text><text x="366" y="118" fill="#52525b" font-size="9" text-anchor="middle">overlap graph</text></g>
+            <g class="node"><circle cx="514" cy="60" r="11" fill="oklch(0.72 0.16 168)"/><text x="514" y="100" fill="#fff" font-size="11.5" text-anchor="middle" font-weight="600">checkpoint</text><text x="514" y="118" fill="#71717a" font-size="9" text-anchor="middle">you approve</text></g>
+            <g class="node"><circle cx="662" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="662" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">worktrees</text><text x="662" y="118" fill="#52525b" font-size="9" text-anchor="middle">lane heads</text></g>
+            <g class="node"><circle cx="810" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="810" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">run batch</text><text x="810" y="118" fill="#52525b" font-size="9" text-anchor="middle">implement to PR</text></g>
+            <g class="node"><circle cx="958" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="958" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">docs</text><text x="958" y="118" fill="#52525b" font-size="9" text-anchor="middle">living docs</text></g>
+            <g class="node"><circle cx="1110" cy="60" r="9" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-width="2"/><text x="1110" y="100" fill="#e4e4e7" font-size="11.5" text-anchor="middle">watchers</text><text x="1110" y="118" fill="#52525b" font-size="9" text-anchor="middle">CI &middot; merge</text></g>
           </svg>
         </div>
 
@@ -526,17 +509,17 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
           <div class="reveal lg:sticky lg:top-28 lg:self-start">
             <div class="diagram rounded-2xl border border-border-subtle bg-surface/30 p-5 sm:p-8" data-draw>
               <svg viewBox="0 0 420 440" class="w-full" fill="none" font-family="'Roboto Mono', monospace">
-                <g class="node"><rect x="110" y="20" width="200" height="58" rx="14" fill="#18181b" stroke="oklch(0.76 0.12 168)" stroke-opacity="0.5"/><text x="210" y="46" fill="#e4e4e7" font-size="12" text-anchor="middle">Plan agent</text><text x="210" y="64" fill="#71717a" font-size="9.5" text-anchor="middle">reads real code + docs</text></g>
+                <g class="node"><rect x="110" y="20" width="200" height="58" rx="14" fill="#18181b" stroke="oklch(0.72 0.16 168)" stroke-opacity="0.5"/><text x="210" y="46" fill="#e4e4e7" font-size="12" text-anchor="middle">Plan agent</text><text x="210" y="64" fill="#71717a" font-size="9.5" text-anchor="middle">reads real code + docs</text></g>
                 <path class="draw" d="M210 78 V120" stroke="#3f3f46" stroke-width="1.5"/>
                 <g class="node"><rect x="80" y="122" width="260" height="58" rx="14" fill="#18181b" stroke="#27272a"/><text x="210" y="148" fill="#e4e4e7" font-size="12" text-anchor="middle">proposal on the tracker</text><text x="210" y="166" fill="#71717a" font-size="9" text-anchor="middle">&lt;!-- ship-it-plan --&gt; marker</text></g>
                 <path class="draw" d="M210 180 V222" stroke="#3f3f46" stroke-width="1.5"/>
-                <g class="node"><rect x="110" y="224" width="200" height="58" rx="14" fill="oklch(0.76 0.12 168 / 0.12)" stroke="oklch(0.76 0.12 168)" stroke-opacity="0.55"/><text x="210" y="250" fill="#e4e4e7" font-size="12" text-anchor="middle">checkpoint</text><text x="210" y="268" fill="#a1a1aa" font-size="9.5" text-anchor="middle">approve &middot; or give feedback</text></g>
+                <g class="node"><rect x="110" y="224" width="200" height="58" rx="14" fill="oklch(0.72 0.16 168 / 0.12)" stroke="oklch(0.72 0.16 168)" stroke-opacity="0.55"/><text x="210" y="250" fill="#e4e4e7" font-size="12" text-anchor="middle">checkpoint</text><text x="210" y="268" fill="#a1a1aa" font-size="9.5" text-anchor="middle">approve &middot; or give feedback</text></g>
                 <!-- feedback loop -->
-                <path class="draw" d="M110 253 C40 253 40 151 76 151" stroke="oklch(0.76 0.12 168)" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="4 4"/>
+                <path class="draw" d="M110 253 C40 253 40 151 76 151" stroke="oklch(0.72 0.16 168)" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="4 4"/>
                 <text x="22" y="205" fill="#52525b" font-size="9" transform="rotate(-90 22 205)">update in place</text>
                 <path class="draw" d="M210 282 V324" stroke="#3f3f46" stroke-width="1.5"/>
                 <g class="node"><rect x="90" y="326" width="240" height="58" rx="14" fill="#18181b" stroke="#27272a"/><text x="210" y="352" fill="#e4e4e7" font-size="12" text-anchor="middle">fix-one-issue</text><text x="210" y="370" fill="#71717a" font-size="9.5" text-anchor="middle">implements against the plan</text></g>
-                <circle cx="210" cy="410" r="4" fill="oklch(0.76 0.12 168)"/>
+                <circle cx="210" cy="410" r="4" fill="oklch(0.72 0.16 168)"/>
                 <text x="210" y="428" fill="#52525b" font-size="9.5" text-anchor="middle">PR</text>
               </svg>
             </div>
@@ -727,6 +710,9 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
 
   <script>
     (function () {
+      // decorative illustrations: hidden from assistive tech (adjacent prose carries the meaning)
+      document.querySelectorAll('.diagram, .stack, .terminal-parallax, .marquee-wrap').forEach(function (el) { el.setAttribute('aria-hidden', 'true'); });
+
       function init() {
         if (!window.gsap || !window.ScrollTrigger) return;
         var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -764,7 +750,7 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
           });
           var nodes = svg.querySelectorAll('.node');
           if (nodes.length) {
-            gsap.from(nodes, { scale: 0.55, opacity: 0, transformOrigin: '50% 50%', duration: 0.6, stagger: 0.09, ease: 'back.out(1.7)', scrollTrigger: { trigger: svg, start: 'top 78%' } });
+            gsap.from(nodes, { scale: 0.55, opacity: 0, transformOrigin: '50% 50%', duration: 0.6, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger: svg, start: 'top 78%' } });
           }
         });
 

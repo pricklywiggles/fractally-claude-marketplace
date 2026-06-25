@@ -36,14 +36,14 @@ Merge these answers with any `preference` values already in the input YAML. A pr
 
 This skill researches in **two fan-out passes** — Phase 1 before the user chooses (options, versions, risk), Phase 2 after (exact install steps for what they picked). Both run as concurrent subagents, and two rules apply to every research subagent you launch:
 
-- **Run them on the cheaper model.** Launch the research subagents with the Agent tool's `model` set to `sonnet` (`claude-sonnet-4-6`). The work is retrieval and structured summarization — fetching versions, reading docs, checking advisories — which Sonnet does well at roughly 40% lower cost than the session model. Keep the *judgment* on the session model you're running on: weighing the options, making the supply-chain risk call, and choosing the final pin are yours, not the subagents'. The subagents gather facts; you decide. (This mirrors how Claude Code uses cheaper subagents for exploration while the main loop stays on the stronger model.)
-- **They return facts, not decisions.** A research subagent brings back verifiable data — versions, dates, advisory IDs, compatibility notes, doc-sourced steps — for you to synthesize. Don't ask a subagent to pick the winner.
+- **Use the bundled researcher, which is pinned to a cheaper model.** Delegate the fan-out to the plugin's **`stack-it:researcher`** subagent — one instance per slot in Phase 1, one per chosen tool in Phase 2. It ships with `model: sonnet` in its frontmatter, so the research runs on Sonnet (roughly 40% cheaper than an Opus-tier session model, and well-suited to retrieval and doc-reading) no matter what the session model is. This is the documented pattern for cost control — Claude Code's own built-in subagents pin a cheaper model the same way — and it's more reliable than asking the orchestrator to set a per-call model override.
+- **Keep the judgment on yourself, the session model.** The `researcher` only gathers facts (its charter forbids it from picking winners); weighing the options, making the supply-chain risk call, and choosing the final pin are yours. Cheap model gathers; session model decides.
 
 ## Step 2: Phase 1 research — options, versions, and risk (so the user can choose)
 
 Carry over every slot that already has a preference; don't research alternatives for a decided slot unless the user asks.
 
-For each slot with no preference, fan out one research subagent per slot (concurrently, per the rules above) to bring back the landscape — **not** install steps yet, just what's needed to choose. For each slot, the subagent returns 2–4 viable options, and for each option:
+For each slot with no preference, fan out one `stack-it:researcher` per slot (concurrently, per the rules above) to bring back the landscape — **not** install steps yet, just what's needed to choose. For each slot, the subagent returns 2–4 viable options, and for each option:
 
 1. Whether it's a most-used / most-trusted / most-modern candidate (different axes; a good shortlist spans them — a battle-tested default and a modern challenger).
 2. The latest stable version, maintenance status, official/ecosystem recommendation, and a real usage signal (downloads, stars-with-activity). Prefer authoritative sources; discount SEO listicles and unmaintained projects.
@@ -56,7 +56,7 @@ Then walk the user through the open slots: present the 2–4 options each with a
 
 ## Step 3: Phase 2 research — exact install and setup from official docs (for what they chose)
 
-Once every slot has a concrete choice, fan out a **second** swarm — one subagent per chosen tool, concurrently, on Sonnet per the rules above. This is the slowest part of the skill and parallelizing it matters. Each subagent has strong, specific instructions: fetch the **exact install, setup, and configuration steps for the exact chosen version** from that tool's **official documentation** (its own docs site, repository, or registry page), never from memory or a third-party tutorial. Setup procedures change between versions — a major release can rewrite the entire config story — so the steps must come from the docs *for the pinned version*, not from general knowledge.
+Once every slot has a concrete choice, fan out a **second** swarm — one `stack-it:researcher` per chosen tool, concurrently. This is the slowest part of the skill and parallelizing it matters. Each subagent has strong, specific instructions: fetch the **exact install, setup, and configuration steps for the exact chosen version** from that tool's **official documentation** (its own docs site, repository, or registry page), never from memory or a third-party tutorial. Setup procedures change between versions — a major release can rewrite the entire config story — so the steps must come from the docs *for the pinned version*, not from general knowledge.
 
 Each Phase-2 subagent returns:
 

@@ -142,12 +142,12 @@
           <h1 class="reveal text-balance font-black leading-[0.95] tracking-[-0.035em] text-heading text-4xl sm:text-6xl sm:leading-[0.92] md:text-7xl lg:text-[5.5rem]">
             from tickets<br class="hidden sm:block" />
             to <span class="text-accent">features</span>.<br class="hidden sm:block" />
-            <span class="block text-2xl font-light tracking-tight text-muted sm:text-3xl md:text-4xl lg:text-5xl mt-3 md:mt-4">leveraging concurrency.</span>
+            <span class="block text-2xl font-light tracking-tight text-muted sm:text-3xl md:text-4xl lg:text-5xl mt-3 md:mt-4">in concurrent lanes.</span>
           </h1>
 
           <p class="reveal mt-8 max-w-[52ch] text-pretty text-sm leading-relaxed text-body md:text-base">
-            <span class="font-mono text-zinc-200">ship-it</span> drives issue tracker tickets (or local changes) through
-            plan, implement, review, and PR, concurrently across a batch, keeping living docs in step and enforcing rules.
+            <span class="font-mono text-zinc-200">ship-it</span> drives issue tracker tickets, or local changes, through
+            plan, implement, review, and PR, concurrently across a batch. Living docs stay in step and house rules ride into every worker.
             Every stage is also a standalone skill you can call on its own.
           </p>
 
@@ -317,7 +317,7 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
       <div class="mx-auto max-w-[1400px] px-5 py-20 md:py-28">
         <div class="reveal max-w-[60ch]">
           <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">eight phases, one prompt</h2>
-          <p class="mt-5 leading-relaxed text-body">All human interaction is front-loaded into <span class="font-mono text-zinc-200">init</span> and the Phase 3 checkpoint, so the workers run non-interactively and parallelize.</p>
+          <p class="mt-5 leading-relaxed text-body">ship-it front-loads all human interaction into <span class="font-mono text-zinc-200">init</span> and the Phase 3 checkpoint, so the workers run non-interactively and parallelize.</p>
         </div>
 
         <!-- Diagram 2: 8-phase rail -->
@@ -405,7 +405,7 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
             <h3 class="font-mono text-base tracking-tight text-heading">worktrees</h3>
             <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-disabled">the isolation</span>
           </div>
-          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">Each lane runs in its own git worktree, made runnable by a project-owned <span class="font-mono text-zinc-300">prepare</span> hook. The main checkout is never touched, and each tree is left runnable afterward for your QA.</p>
+          <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-body">Each lane runs in its own git worktree, made runnable by a project-owned <span class="font-mono text-zinc-300">prepare</span> hook. Your main checkout is never touched, and each tree stays in place afterward for your QA.</p>
           <div class="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-1.5 font-mono text-[11px] text-muted">
             <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0 text-accent-dim" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z" stroke-linecap="round" stroke-linejoin="round"/></svg>
             .claude/worktrees/<span class="text-body">&lt;id&gt;</span>
@@ -491,16 +491,16 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
 
             <div class="mt-8 space-y-5">
               <div class="rounded-xl border border-border-subtle bg-zinc-950/40 p-5">
-                <h3 class="text-base font-semibold tracking-tight text-heading">comprehensive, not a sketch</h3>
+                <h3 class="text-base font-semibold tracking-tight text-heading">comprehensive, down to the risks</h3>
                 <p class="mt-1.5 text-sm leading-relaxed text-body">Context, approach with alternatives, per-file changes and reuse, key decisions, edge cases, verification, risks. Depth scales: <span class="font-mono text-zinc-300">light</span> / <span class="font-mono text-accent">adaptive</span> / <span class="font-mono text-zinc-300">full</span>.</p>
               </div>
               <div class="rounded-xl border border-border-subtle bg-zinc-950/40 p-5">
                 <h3 class="text-base font-semibold tracking-tight text-heading">propose, review, update on the tracker</h3>
-                <p class="mt-1.5 text-sm leading-relaxed text-body">Each plan is posted to its issue as a proposal (idempotent, marker-keyed), updated in place on your feedback, then finalized as approved. Review it in the terminal or on Linear.</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-body">ship-it posts each plan to its issue as a marker-keyed, idempotent proposal, updates it in place on your feedback, then finalizes it as approved. Review it in the terminal or on Linear.</p>
               </div>
               <div class="rounded-xl border border-accent/20 bg-accent/[0.04] p-5">
                 <h3 class="text-base font-semibold tracking-tight text-accent">verify every API against the installed version</h3>
-                <p class="mt-1.5 text-sm leading-relaxed text-body">No planning or coding from training-data memory. Package and service-shape calls are confirmed against what the project actually has, checking <span class="font-mono text-zinc-300">node_modules</span>, <span class="font-mono text-zinc-300">~/.cargo/registry/src</span>, <span class="font-mono text-zinc-300">site-packages</span>, and <span class="font-mono text-zinc-300">context7</span>. Unconfirmable calls are flagged, not asserted.</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-body">No planning or coding from training-data memory. The planner confirms package and service-shape calls against what the project actually has, checking <span class="font-mono text-zinc-300">node_modules</span>, <span class="font-mono text-zinc-300">~/.cargo/registry/src</span>, <span class="font-mono text-zinc-300">site-packages</span>, and <span class="font-mono text-zinc-300">context7</span>. Unconfirmable calls are flagged, not asserted.</p>
               </div>
             </div>
           </div>
@@ -584,8 +584,8 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
     <section class="border-y border-accent/[0.06] bg-surface/15">
       <div class="mx-auto max-w-[1400px] px-5 py-20 md:py-32">
         <div class="reveal max-w-[60ch]">
-          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">docs kept current, three ways</h2>
-          <p class="mt-5 leading-relaxed text-body">Each configured doc job runs in parallel and is one of three mechanics. Built-ins for OpenSpec, graphify, and impeccable; <span class="font-mono text-zinc-200">init</span> generates a job for any other doc.</p>
+          <h2 class="mt-1 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">RTFM</h2>
+          <p class="mt-5 leading-relaxed text-body">Did you add openspec or keep documentation around but your agent always forgets to update it? Each configured doc job runs in parallel and is one of three mechanics. Built-ins for OpenSpec, graphify, and impeccable; <span class="font-mono text-zinc-200">init</span> generates a job for any other doc.</p>
         </div>
 
         <div class="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-3" data-stagger>
@@ -686,7 +686,7 @@ claude plugin install ship-it@fractally-claude-marketplace</pre>
           </div>
           <div class="rounded-2xl border border-border-subtle bg-surface/40 p-7">
             <h3 class="text-sm font-medium text-heading">The checkpoint conversation</h3>
-            <p class="mt-3 text-sm leading-relaxed text-body">At the gate you can reply <span class="font-mono text-accent">approve</span>, or give feedback on any plan ("use per-child attributes, not the deep value") and the proposal is revised in place before anything is built.</p>
+            <p class="mt-3 text-sm leading-relaxed text-body">At the gate you can reply <span class="font-mono text-accent">approve</span>, or give feedback on any plan, "use per-child attributes, not the deep value", and ship-it revises the proposal in place before building anything.</p>
           </div>
         </div>
       </div>

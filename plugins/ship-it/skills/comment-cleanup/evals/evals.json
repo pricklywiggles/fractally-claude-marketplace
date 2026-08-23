@@ -1,0 +1,69 @@
+{
+  "skill_name": "comment-cleanup",
+  "note": "Fixtures live in tmp/comment-cleanup-workspace/fixtures/ (gitignored) and are recreated by the eval harness. Each eval hands the agent one over-commented file with whole-file scope and checks the cleaned file, not the report prose. The aggressiveness bar: directives untouched, narration gone, buried whys compressed (one line is the rule, two the rare ceiling), no trailing remedy clauses, commented-out code deleted, and non-comment code (including dead code) left alone. Comment lines must also respect the ~100-column limit; a stretched single line is a fail, and negative-parallelism contrast clauses are a fail.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "react-overcommented",
+      "prompt": "Clean up the comments in cart-summary.tsx. Scope: this one file, whole-file pass. Apply your edits directly to the file.",
+      "expected_output": "A cleaned cart-summary.tsx: the eslint-disable directive byte-identical; all narration, the section banner, the JSDoc header, and the commented-out oldTotal code deleted; the 6-line VAT comment compressed to ONE line carrying the EU-VAT-on-shipping why; the free-shipping pre-tax comment compressed to ONE line carrying the marketing/legal why.",
+      "files": [
+        "fixtures/cart-summary.tsx"
+      ],
+      "assertions": [
+        "eslint-disable-next-line directive is still present and unmodified",
+        "No commented-out code remains (the oldTotal block is gone)",
+        "A comment carrying the EU-VAT-charged-on-shipping rationale survives and spans exactly 1 line",
+        "A comment carrying the pre-tax free-shipping threshold rationale (marketing/legal) survives and spans exactly 1 line",
+        "No surviving non-directive comment spans more than 2 lines",
+        "At most 4 non-directive comments remain in the file",
+        "All pure narration is gone: no comment matching 'Helper functions', 'Rounds a number', 'Looks up the VAT rate', 'Calculates the shipping fee', 'state for the coupon', 'whether the coupon', 'Calculate the subtotal', 'useEffect hook', 'track the cart view', 'Compute the final total', 'input for the coupon', 'show the subtotal'",
+        "No non-comment code was changed (helpers, JSX, and logic are untouched)",
+        "No comment line exceeds 100 characters"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "python-buried-why",
+      "prompt": "Clean up the comments in tenant_client.py. Scope: this one file, whole-file pass. Apply your edits directly to the file.",
+      "expected_output": "A cleaned tenant_client.py: noqa and type-ignore pragmas untouched; internal-helper docstrings deleted; the 8-line vendor-bug comment compressed to 1 line (2 max) carrying the 200-with-embedded-error why and the VEN-4821 ticket, with no trailing clause restating the body inspection the code performs; sleep/retry narration deleted; the commented-out fetch_tenant_v1 deleted.",
+      "files": [
+        "fixtures/tenant_client.py"
+      ],
+      "assertions": [
+        "The 'noqa: F401' pragma is still present and unmodified",
+        "The 'type: ignore' pragma is still present and unmodified (flagged at most, never moved or deleted)",
+        "A comment carrying the vendor-returns-200-with-embedded-error why survives at 1 line (2 max), with no line over 100 characters",
+        "The surviving vendor comment still references ticket VEN-4821",
+        "The surviving vendor comment does not end by restating what the adjacent code does (no 'inspect the body instead' style clause)",
+        "The commented-out fetch_tenant_v1 implementation is gone",
+        "The 'sleep for the backoff duration' and 'increment the retry counter' narration comments are gone",
+        "No Args:/Returns: docstring ceremony remains on internal helpers",
+        "No surviving non-directive comment spans more than 2 lines",
+        "No non-comment code was changed",
+        "No comment line exceeds 100 characters"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "plausible-context-trap",
+      "prompt": "Clean up the comments in print-report.tsx. Scope: this one file, whole-file pass. Apply your edits directly to the file.",
+      "expected_output": "A cleaned print-report.tsx where the plausible-sounding context comments that narrate React/state semantics are deleted, the genuine cross-file why (chart width pinned to 640: print stylesheet fixes the container, Recharts reads layout at mount) survives at up to 2 lines, any kept beforeprint or matchMedia rationale is a single line, and the never-used searchTimer ref plus its useRef import are left in the code (dead code is flagged in the report, not deleted).",
+      "files": [
+        "fixtures/print-report.tsx"
+      ],
+      "assertions": [
+        "A comment carrying the print-CSS-640px / Recharts-reads-layout-at-mount rationale survives and spans at most 2 lines",
+        "The state-lifecycle narration is gone ('Null until the GET returns', 'Tracks whether we are currently in print mode')",
+        "The React-semantics narration is gone ('persists across renders via ref', 'The effect above re-runs')",
+        "If a beforeprint timing rationale is kept, it spans exactly 1 line",
+        "If a matchMedia fallback rationale is kept, it spans exactly 1 line",
+        "The unused searchTimer ref declaration and the useRef import are still present in the code (dead code noted in the report, not deleted)",
+        "At most 3 non-directive comments remain in the file",
+        "No surviving non-directive comment spans more than 2 lines",
+        "No comment line exceeds 100 characters",
+        "No surviving comment uses negative parallelism (a trailing 'not X' contrast clause, e.g. 'at mount, not at print time')"
+      ]
+    }
+  ]
+}

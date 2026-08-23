@@ -1,216 +1,267 @@
 ---
 name: comment-cleanup
 description: >-
-  Audit code comments against the user's strict "comments explain non-obvious
-  why, never narrate what the code does" standard, and propose concrete fixes
-  (keep / trim / delete, or clarify the code so the comment is unnecessary). Use
-  this whenever the user asks to review, audit, clean up, sanity-check, or
-  justify comments; whenever they ask "did I follow the comment rules / our
-  comment guidelines"; right after writing or heavily editing code; and before
-  committing or opening a PR. Also use it proactively when you have just
-  generated more than a couple of comments. The caller may restrict the audit to
-  a path, a function/symbol, a glob, "staged", "the branch diff", or "the PR";
-  if no scope is given, audit only newly written or changed code, never the
-  whole repo.
+  Aggressively audit code comments against the user's strict "comments explain
+  non-obvious why, never narrate what the code does" standard: delete comments
+  that do not earn their place and compress the survivors (two-line ceiling,
+  one line preferred). Use this whenever the user asks to review, audit, clean
+  up, sanity-check, or justify comments; whenever they ask "did I follow the
+  comment rules / our comment guidelines"; right after writing or heavily
+  editing code; and before committing or opening a PR. Also use it proactively
+  when you have just generated more than a couple of comments. The caller may
+  restrict the audit to a path, a function/symbol, a glob, "staged", "the
+  branch diff", or "the PR"; if no scope is given, audit only newly written or
+  changed code, never the whole repo.
 ---
 
 # Comment cleanup
 
-This skill enforces one idea: **a comment must earn its place by explaining
-something the code cannot say itself.** Comments are read far more often than
-they are written, they are not type-checked, and they rot silently. A comment
-that restates the code is worse than no comment: it is noise that a future
-reader has to read, distrust, and re-verify against the code.
+One idea drives this skill: **a comment must earn its place by saying something
+the code cannot, in as few words as possible.** Comments are read far more
+often than written, are never type-checked, and rot silently. A comment that
+restates the code is worse than none: the reader must read it, distrust it,
+and verify it against the code.
 
-## The standard
+The default verdict is REMOVE. A comment survives only by proving it carries
+information the code cannot express, and even then it gets compressed. A
+wrongly deleted comment costs one git revert; a wrongly kept one costs every
+future reader. When torn between KEEP and TRIM, trim. When torn between TRIM
+and REMOVE, remove.
 
-Keep a comment **only** if it explains a non-obvious *why* that the code cannot
-be made to express on its own. Legitimate categories:
+## What survives
 
-- **Business / domain rule** that constrains the code but is not derivable from
-  it ("archived rows are excluded here because the exporter counts them separately").
-- **Edge case or workaround** ("WKWebView fires this twice on macOS; the second
-  is ignored").
-- **Historical / architectural decision** ("built in Rust instead of config
-  because a runtime env var cannot drive a compile-time feature").
-- **Cross-file or security intent** that isn't visible locally ("pairs with the
-  Rust devtools(false) gate; this only removes the in-app entry point").
+Only a non-obvious *why* the code cannot be made to express:
+
+- **Business / domain rule** not derivable from the code ("archived rows
+  excluded: the exporter counts them separately").
+- **Edge case or workaround** ("WKWebView fires this twice on macOS; second
+  ignored").
+- **Historical / architectural decision** ("Rust, not config: a runtime env
+  var can't drive a compile-time feature").
+- **Cross-file or security intent** invisible locally ("pairs with the Rust
+  devtools(false) gate; this only removes the in-app entry point").
 - **Performance rationale** for code that would otherwise look arbitrary
   ("hoisted out of the row so the memoized child stays stable").
-- **A tried-and-rejected alternative**, so it isn't "fixed" back ("a red tint is
-  invisible on this surface, so the signal is the text color").
-- **Intentional surprising behavior**, e.g. a deliberately swallowed error
-  ("already-pinned is the expected no-op").
+- **Tried-and-rejected alternative**, so it isn't "fixed" back ("red tint is
+  invisible on this surface; signal is the text color").
+- **Intentional surprising behavior** ("already-pinned is the expected no-op").
 
-Delete or rewrite everything else.
+Everything else is removed or rewritten. A valid category earns a comment the
+right to exist, not the right to its current length.
 
-## The prime directives: be as brief as possible,never narrate the code
+## Length limits
 
-A comment that describes *what the next line(s) do* is never acceptable, and
-this is not a judgment call to hand back to the user. If the code's purpose is
-not clear without a narrating comment, **the code is the problem**, fix it:
-rename a variable or function, extract a well-named helper, introduce an
-intermediate named value, or simplify the control flow. Only if the logic is
-genuinely irreducibly subtle does it get a comment, and then the comment
-explains *why it must be this way*, not *what it does*.
+- **One line is the rule for every comment.** Not a target, the rule.
+- **One line means one line within the file's line-length convention**
+  (assume ~100 columns when none is configured). Compress content, not
+  formatting: a 140-character line is not a one-line comment, it is an
+  uncompressed comment dodging the rule.
+- **A second line must earn its place the way a KEEP does**: only when the why
+  genuinely cannot fit in one line within the column limit after cutting
+  every derivable word. A two-line comment is a smell; compress to one
+  before conceding two. A legitimate why that will not fit one line wraps to
+  two; it never stretches the line.
+- **Longer than two lines is exceptional and should almost never happen.**
+  The only justification is a why where losing detail would cause a bug: a
+  protocol or spec constraint, a non-obvious algorithm invariant, a security
+  property. If you write one, every line past the second must independently
+  pass the same non-derivability test, and the audit report must call it out.
 
-Examples of narration to remove (and instead clarify the code):
+## Economy of words
+
+Comments are telegrams, not prose. For any comment you keep or rewrite:
+
+- Use the shortest phrasing that preserves the fact. Fragments beat sentences;
+  comma splices are fine in comments; drop articles and subjects where the
+  result still reads.
+- One fact per comment. A second fact is usually narration.
+- Cut lead-ins and hedges: "Note that", "This is because", "We do this to",
+  "It's important to". Start at the fact.
+- **No negative parallelism.** State the fact; the denied alternative is
+  implied. "Recharts reads layout at mount" says everything "Recharts reads
+  layout at mount, not at print time" says, in half the words.
+- Cut connective padding when the clause stands alone: "while", "in order
+  to", "so that". "beforeprint fires before the snapshot: charts re-render
+  at print width" needs no "while ... can still".
+- **Never end with what the code does next.** A trailing remedy clause
+  ("...so inspect the body instead", "...so we clear the cache here")
+  restates the adjacent code; the why alone is the comment.
+- No em dashes (hard user preference). Use a colon, semicolon, or two
+  sentences.
+
+Worked example. Before, three lines:
+
+```
+# The vendor returns HTTP 200 with an embedded error object when a
+# tenant is suspended (ticket VEN-4821, won't fix), so raise_for_status
+# cannot detect it; inspect the body instead.
+```
+
+After, one line within the column limit, nothing non-derivable lost:
+
+```
+# Vendor returns 200 with an error body for suspended tenants; won't fix (VEN-4821).
+```
+
+Every dropped word was derivable: "inspect the body instead" is the next line
+of code, and "raise_for_status cannot detect it" follows from the 200 status.
+Resist keeping derivable clauses by stretching the line; that trades the
+two-line smell for a worse one.
+
+## Never narrate the code
+
+A comment describing *what the next lines do* is never acceptable, and this is
+not a judgment call to hand back to the user. If the code is unclear without
+the narration, the code is the problem: rename a variable or function, extract
+a well-named helper, introduce an intermediate named value, or simplify the
+control flow. Only irreducibly subtle logic gets a comment, and it explains
+*why it must be this way*, not what it does.
+
+Narration to remove (and instead clarify the code):
 
 - `// loop through the users` above a `for` loop.
-- `// Admins skip the quota check; everyone else is limited` above the exact
-  conditionals that compute that. The variable names should say it.
-- `// rounded card with a subtle border and shadow` above a class
-  string that literally contains `rounded-lg border shadow-sm`.
-- A docstring that re-lists the parameters and their obvious meanings.
+- `// Admins skip the quota check` above the conditionals that compute exactly
+  that. The names should say it.
+- `// rounded card with a subtle border` above a class string containing
+  `rounded-lg border shadow-sm`.
+- A docstring re-listing parameters and their obvious meanings.
 
-When you remove a narration comment, in the same change make the code
-self-explanatory if it wasn't already, and say what you renamed/extracted.
+When you remove narration, make the code self-explanatory in the same change
+and report what you renamed or extracted.
+
+## The per-sentence audit
+
+A valid why does not protect the sentences around it. Audit every sentence and
+clause independently; any that narrates implementation, restates a type or
+name, or describes language/framework semantics gets cut even when its
+neighbor is legitimate. Narration often disguises itself as context:
+
+- "The effect re-runs and rebuilds the map cleanly once those conditions
+  clear." (That is just how `useEffect` dependencies work.)
+- "Null until the GET returns or a print fetch populates it." (Restates a
+  state variable's lifecycle visible from its `setState` call sites.)
+
+The classic failure: a five-line comment whose first sentence is the
+irreducible why and whose rest narrates mechanism. That is a TRIM to one line,
+not a KEEP. Treat every multi-sentence comment as a TRIM until each sentence
+has independently justified itself, and then compress the survivor under the
+length limits above.
 
 ## Also enforce
 
-- **Brevity, applied per sentence.** A comment with a valid *why* is not
-  automatically a KEEP. Every sentence in it must independently carry
-  non-derivable information. After distilling the irreducible why, audit each
-  remaining sentence; if it describes what the code does, restates a
-  type/name, or narrates language/framework semantics, cut it. Common
-  narration patterns that look like "context" but are visible from the body
-  and must be removed:
-  - "`beforeprint` fires while the page can still reflow, so flipping state
-    here lets charts render at a fixed print width before the PDF is
-    captured." (The event-listener call right below already shows this.)
-  - "The effect re-runs and rebuilds the map cleanly once those conditions
-    clear." (That is just how `useEffect` dependency arrays work.)
-  - "`matchMedia('print')` is the fallback path for engines without the
-    events." (Code shows the second listener; calling it "fallback" adds
-    nothing.)
-  - "Null until the GET returns or a print fetch populates it." (Restating
-    a state variable's lifecycle visible from `setState` call sites.)
+- **No commented-out code.** Delete it; version control remembers.
+- **No doc-header comments** unless the symbol is genuinely public API or
+  feeds an auto-doc generator. Internal helpers get no ceremonial headers.
+- **Codebase idiom sets tone, not length.** Match the file's voice, but the
+  length limits apply even in a chatty codebase; never add verbosity to fit in.
+- Respect project `CLAUDE.md` / `AGENTS.md` comment rules; this skill is their
+  enforcement arm, not a competing standard.
 
-  Mandatory analysis: Is this comment as short as is possible, is there another way
-  to restate it that is shorter and serves the same purpose. How many lines does this take?
-  If a comment is 100% necessary, ask yourself how many lines is it and the more lines it has,
-  the more scrutinous you should be to try restating it.
+## Comments only
 
-  Worked failure mode: a 5-line comment whose first sentence is the
-  irreducible why and whose next three sentences narrate `beforeprint`,
-  `matchMedia`, and React semantics is a **TRIM to one or two sentences**,
-  not a KEEP. Default to TRIM for any multi-sentence comment until you have
-  justified each sentence independently.
+This audit edits comments, plus the minimal rename or extract needed to retire
+a narration comment. Nothing else. Dead code, unused imports or refs,
+misplaced pragmas, suspected bugs: note them in the report as observations and
+leave the code alone. Deleting them may be right, but it is not this audit's
+call, and mixing it into a comment pass makes the diff unreviewable.
 
-  Example trim: "`updates the title; the API rejects edits to locked items. A title
-  change can surface anywhere, so clear all caches.`" → keep only the
-  cache-invalidation rationale; the rest restates the function.
-- **No commented-out code.** Delete it. Version control remembers.
-- **No doc-header comments** on a symbol unless it is genuinely public API or
-  feeds an auto-doc generator. Internal helpers do not get ceremonial headers.
-- **Match the codebase.** If a file's idiom is terse, do not introduce verbose
-  comments, and vice versa.
-- **No em dashes** in any comment you write or rewrite (use a colon, semicolon,
-  or two sentences). This is a hard user preference.
-- Respect any project `CLAUDE.md` / `AGENTS.md` comment rules; this skill is the
-  enforcement arm of those rules, not a competing standard.
-
-## What is out of scope of the audit
+## Out of scope
 
 Do not flag or rewrite:
 
-- **Pre-existing comments that were only moved** by a refactor in the change
-  under review. You are auditing comments *introduced or modified* in this work,
-  not re-litigating untouched authorial decisions. Note them as "pre-existing,
-  unchanged" and move on, unless the user explicitly asks for a whole-file pass.
-- **Functional / directive comments** that the toolchain consumes:
-  `biome-ignore`, `eslint-disable`, `ts-expect-error`, `@ts-ignore`,
-  `prettier-ignore`, `noqa`, `nolint`, `# type:` pragmas, codegen markers,
-  shebangs, license/copyright headers. These are not explanatory prose.
-- Comments outside the resolved scope (see below).
+- **Pre-existing comments only moved** by a refactor in the change under
+  review. Audit comments introduced or modified in this work; note moved ones
+  as "pre-existing, unchanged" unless the user asks for a whole-file pass.
+- **Functional / directive comments** the toolchain consumes: `biome-ignore`,
+  `eslint-disable`, `ts-expect-error`, `@ts-ignore`, `prettier-ignore`,
+  `noqa`, `nolint`, `# type:` pragmas, codegen markers, shebangs,
+  license/copyright headers.
+- Comments outside the resolved scope (below).
 
 ## Resolving scope
 
-The caller may pass a scope. Honor it literally:
+Honor a caller-passed scope literally:
 
-- A **file path or glob** → audit comments in those files only.
-- A **function / symbol / class name** → audit comments inside that symbol only.
-- **"staged"** → `git diff --cached`.
-- **"branch" / "branch diff" / "the PR"** → diff vs the base branch (below).
-- A **commit range** → that range.
+- A **file path or glob**: those files only.
+- A **function / symbol / class name**: comments inside that symbol only.
+- **"staged"**: `git diff --cached`.
+- **"branch" / "branch diff" / "the PR"**: diff vs the base branch (below).
+- A **commit range**: that range.
 
-If **no scope is given**, default to *newly written or changed code only*, the
-uncommitted working tree plus any commits on this branch that are not on the
-main branch. Never audit the entire repository by default; that would drown the
-signal and re-litigate code the user did not touch.
-
-Determine the changed comment lines:
+If no scope is given, default to newly written or changed code only: the
+uncommitted working tree plus this branch's commits not on main. Never audit
+the whole repository by default; that drowns the signal and re-litigates code
+the user did not touch.
 
 ```bash
 # main branch name (fallbacks if not "main")
 base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' || echo main)
 mergebase=$(git merge-base "origin/$base" HEAD 2>/dev/null || git merge-base "$base" HEAD)
 
-# Added/modified lines in the default scope (working tree + branch commits):
 git diff "$mergebase"...HEAD            # committed on this branch
 git diff                                # unstaged
 git diff --cached                       # staged
 ```
 
-Look at added (`+`) lines that are comments, then open the surrounding code to
-judge each one in context. Judging a comment requires reading the code it sits
-on, not just the comment text.
+Judge each added comment line in the context of the code it sits on, not from
+the comment text alone.
 
 ## Workflow
 
-1. **Resolve scope** (above) and collect every comment introduced or modified in
-   that scope. Separate out the out-of-scope categories and list them once as
-   skipped, with a one-line reason.
-2. **For each in-scope comment, run two passes, not one.** Pass A: "Is there
-   any non-obvious why in here at all?" If no → REMOVE. Pass B (the one I
-   keep skipping): "For *each* sentence and clause, is it independently
-   non-derivable from the code?" Any sentence that narrates implementation,
-   restates types/names, or describes language/framework semantics gets cut,
-   even if a sibling sentence in the same comment is a legitimate why.
-   Default to TRIM for any multi-sentence comment; promote to KEEP only after
-   justifying every sentence independently.
-3. Assign a **verdict**:
-   - **KEEP**: non-obvious why, *and every sentence in the comment earns its
-     place independently*. Quote it, name the category.
-   - **TRIM**: contains a real why alongside narration, restatement, or
-     mechanism description. Give the exact shortened text. This is the
-     expected verdict for most multi-sentence comments.
-   - **REMOVE**: narration, duplication, obvious, commented-out code, or
-     ceremonial header. If it was narration masking unclear code, also give the
-     concrete code change (rename/extract) that makes the comment unnecessary.
-4. **Apply** the TRIM/REMOVE edits (and any accompanying code-clarity change),
-   unless the caller asked for analysis only. Do not ask the user to adjudicate
-   narration; removing it is the rule, not a preference.
-5. Re-run the project linter/formatter on touched files and report the result.
+1. **Resolve scope** and collect every in-scope comment. List the skipped
+   out-of-scope categories once, with a one-line reason each.
+2. **Two passes per comment.** Pass A: any non-derivable why at all? No:
+   REMOVE. Pass B: per-sentence audit, then compress the survivor to one line
+   (two max).
+3. **Verdict:**
+   - **REMOVE** (the expected majority): narration, duplication, obvious,
+     commented-out code, ceremonial header. If narration masked unclear code,
+     also give the rename/extract that retires the comment.
+   - **TRIM**: a real why wrapped in narration or slack prose, or any comment
+     over the length limit. Give the exact replacement text.
+   - **KEEP** (rare): every sentence independently non-derivable AND within
+     the length limits. Quote it, name its category.
+4. **Final squeeze.** Reread every survivor once more with fresh eyes. Any
+   two-line comment gets one more compression attempt toward one line; any
+   line over the column limit gets its derivable clauses cut, never a longer
+   line; trailing what-the-code-does clauses and "not X" contrast halves go.
+   This pass almost always shortens something; if it changed nothing, be
+   suspicious that pass B was shallow.
+5. **Calibrate before reporting.** If KEEP outnumbers REMOVE, if most
+   survivors are two-liners, or if any comment exceeds two lines without an
+   audit-report justification, re-run pass B; the audit was too generous.
+6. **Apply** the edits (and accompanying code-clarity changes) unless the
+   caller asked for analysis only. Comments only, per the rule above. Do not
+   ask the user to adjudicate narration; removing it is the rule.
+7. Re-run the project linter/formatter on touched files and report the result.
 
 ## Output format
 
 Lead with a one-line tally, then a per-comment table, then the skipped list.
-Keep it scannable. Use `path:line` references.
+Use `path:line` references.
 
 ```
-Audited 14 comments in <scope>. Verdict: 6 keep, 3 trim, 5 remove.
+Audited 14 comments in <scope>. Verdict: 8 remove, 4 trim, 2 keep.
 
-| Location | Comment (truncated) | Why we need it | Verdict |
+| Location | Comment (truncated) | Why | Verdict |
 |---|---|---|---|
-| tree-view.tsx:148 | "Computed once here so the memoized child stays stable" | perf rationale, non-obvious | KEEP |
-| api/items/route.ts:62 | "title edit. updateItem is the single permission authority" | 1st clause restates the handler | TRIM → "updateItem is the single permission authority." |
-| tree-view.tsx:864 | "Guests get read-only; members can edit..." | narrates the conditionals below it | REMOVE (names already say it) |
+| tree-view.tsx:148 | "hoisted so the memoized child stays stable" | perf rationale | KEEP |
+| api/items/route.ts:62 | "title edit. updateItem is the single permission authority" | 1st clause restates handler | TRIM → "updateItem is the single permission authority" |
+| tree-view.tsx:864 | "Guests get read-only; members can edit..." | narrates conditionals | REMOVE (names say it) |
 
 Skipped (out of scope): 2 pre-existing comments moved by the refactor
 (item-pin.ts:3, tree-view.tsx:861); 1 biome-ignore directive.
+
+Comments removed: 57% (412 chars removed, down from 723). Longest surviving comment: 1 line.
 ```
 
-Finally provide a summary of the changes in this form: "comment % removed: X% (Y chars removed, down from Z)"
-
-Then, if you applied edits, list the files changed and the lint result. If you
-made code-clarity changes to retire a narration comment, state exactly what you
-renamed or extracted so the diff is reviewable.
+If you applied edits, list the files changed and the lint result. If you made
+code-clarity changes to retire narration, state exactly what you renamed or
+extracted so the diff is reviewable.
 
 ## Disposition, not diplomacy
 
-The user does not want borderline narration calls deferred to them. If a comment
-narrates the code, it goes, and the code is made clear enough to stand alone.
-Reserve genuine questions for cases where the *why* itself is unknown to you
-(e.g. a comment asserts a business rule you cannot verify), there, ask, because
+The user does not want borderline calls deferred to them. Narration goes, and
+the code is made clear enough to stand alone. Ask only when the *why* itself
+is unknown to you (a comment asserts a business rule you cannot verify);
 inventing a rationale is worse than removing the comment.

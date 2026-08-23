@@ -134,7 +134,7 @@
           </h1>
 
           <p class="reveal mt-8 max-w-[54ch] text-pretty text-sm leading-relaxed text-body md:text-base">
-            From the database to the framework to the test tooling, every choice in your stack shapes your developer experience, your performance, and your results. <span class="font-mono text-zinc-200">stack-it</span> takes you from an empty folder to a fully set-up stack, giving you options and guidance at every step and quietly handling the pesky install issues and incompatible choices along the way.
+            Database, framework, test tooling: every choice in your stack shapes your developer experience and what you ship. <span class="font-mono text-zinc-200">stack-it</span> takes you from an empty folder to a fully set-up stack. It brings you options and guidance at every step, and quietly handles the pesky install issues and incompatible choices along the way.
           </p>
 
           <div class="reveal mt-9 flex flex-wrap items-center gap-3">
@@ -279,7 +279,7 @@
         <div class="reveal max-w-[62ch]">
           <div class="kicker text-[11px] text-accent/70">how it works</div>
           <h2 class="mt-3 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">you make the calls, stack-it does the legwork</h2>
-          <p class="mt-5 leading-relaxed text-body"><span class="font-mono text-zinc-200">stack-it</span> leaves the decisions to you but helps you make them. First it works out the shape of the stack: a series of "slots," placeholders for the tools, frameworks, and languages your project needs. Then it settles the foundation decision first (the language and framework that shape everything else) and researches the remaining slots online in a sensible order, bringing you the options; you choose, and it handles the pinning, vetting, installing, proving, and documenting in between. The orchestrator <span class="font-mono text-zinc-200">setup-stack</span> runs the whole journey, commits a checkpoint after every stage, keeps a running task list so you can see what's left, and resumes from wherever you already are.</p>
+          <p class="mt-5 leading-relaxed text-body"><span class="font-mono text-zinc-200">stack-it</span> leaves the decisions to you but helps you make them. First it works out the shape of the stack: a series of "slots," placeholders for the tools, frameworks, and languages your project needs. The foundation decision comes first, the language and framework that shape everything else; then it researches the remaining slots online in a sensible order and brings you the options. You choose, and it handles the pinning, vetting, installing, proving, and documenting in between. The orchestrator <span class="font-mono text-zinc-200">setup-stack</span> runs the whole journey, commits a checkpoint after every stage, keeps a running task list so you can see what's left, and resumes from wherever you already are.</p>
         </div>
 
         <!-- the you / stack-it journey -->
@@ -334,7 +334,7 @@
         <div class="reveal lg:sticky lg:top-28 lg:self-start">
           <div class="kicker text-[11px] text-accent/70">options, not guesswork</div>
           <h2 class="mt-3 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">it brings you a short list, you decide</h2>
-          <p class="mt-5 max-w-[50ch] leading-relaxed text-body">stack-it never picks behind your back. It settles the keystone first (the language-and-framework choice that shapes every other slot, offered as a coupled pair so picking one never silently corners the other), then works through the rest in a sensible order. For each open slot it researches the field (versions, maintenance, compatibility, advisories) and surfaces two to four current options with the tradeoff that actually matters. You choose; then it pulls the exact install steps from the tool's official docs for that exact version, pins it, and re-checks for advisories. Hard preferences are honored from the start, and the heavy research runs on a leaner model to keep it fast and cheap.</p>
+          <p class="mt-5 max-w-[50ch] leading-relaxed text-body">stack-it never picks behind your back. The keystone comes first: the language-and-framework choice that shapes every other slot, offered as a coupled pair so picking one never silently corners the other. Then it works through the rest in a sensible order. For each open slot it researches versions, maintenance, compatibility, and advisories, and surfaces two to four current options with the tradeoff that actually matters. You choose; then it pulls the install steps from the tool's official docs for that exact version, pins it, and re-checks for advisories. It honors your hard preferences from the start, and runs the heavy research on a leaner model to keep it fast and cheap.</p>
           <p class="mt-4 max-w-[50ch] text-sm leading-relaxed text-muted">It's the difference between a tool that decides for you and one that helps you decide well.</p>
         </div>
 
@@ -406,7 +406,7 @@
         <div class="reveal max-w-[64ch]">
           <div class="kicker text-[11px] text-accent/70">the pesky parts, handled</div>
           <h2 class="mt-3 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-[3.2rem]">the tedious, error-prone parts are the point</h2>
-          <p class="mt-5 leading-relaxed text-body">The setup work that's easy to get subtly wrong is exactly what stack-it takes off your plate. The riskiest part is the part you can't see: a dependency carrying a known CVE, or a version that was hijacked hours ago and pulled in before anyone noticed. So before anything touches your machine, every choice is pinned and security-vetted.</p>
+          <p class="mt-5 leading-relaxed text-body">The setup work that's easy to get subtly wrong is exactly what stack-it takes off your plate. The riskiest part is the part you can't see: a dependency carrying a known CVE, or a version that was hijacked hours ago and pulled in before anyone noticed. So stack-it pins and security-vets every choice before anything touches your machine.</p>
         </div>
 
         <!-- featured: security -->
@@ -425,21 +425,21 @@
                   <span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-accent/20 bg-accent/[0.07]"><svg viewBox="0 0 24 24" class="h-4 w-4 text-accent-dim" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-3z" stroke-linejoin="round"/><path d="M9.5 12l1.8 1.8 3.5-3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                   <div>
                     <h4 class="font-mono text-[13px] text-heading">CVE &amp; advisory scan</h4>
-                    <p class="mt-1 text-sm leading-relaxed text-body">Every pick is checked for CVEs, advisories, and significant open issues against GitHub Security Advisories and the language's advisory database, where one exists. Anything affecting your chosen version is flagged before you commit to it, not after it's in your lockfile.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-body">stack-it checks every pick for CVEs, advisories, and significant open issues against GitHub Security Advisories and the language's advisory database, where one exists. Anything affecting your chosen version is flagged before you commit to it, not after it's in your lockfile.</p>
                   </div>
                 </div>
                 <div class="flex gap-3.5">
                   <span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-accent/20 bg-accent/[0.07]"><svg viewBox="0 0 24 24" class="h-4 w-4 text-accent-dim" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg></span>
                   <div>
                     <h4 class="font-mono text-[13px] text-heading">exact pins, no loose ranges</h4>
-                    <p class="mt-1 text-sm leading-relaxed text-body">Each tool is pinned to the exact version that was vetted, never a floating <span class="font-mono text-zinc-300">^</span> or <span class="font-mono text-zinc-300">~</span> range. Those ranges are how one poisoned patch auto-installs across thousands of projects at once; pinning shuts that door and keeps every build reproducible.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-body">Each tool is pinned to the exact version that was vetted, never a floating <span class="font-mono text-zinc-300">^</span> or <span class="font-mono text-zinc-300">~</span> range. A range is how one poisoned patch auto-installs across thousands of projects at once; pinning shuts that door and keeps every build reproducible.</p>
                   </div>
                 </div>
                 <div class="flex gap-3.5">
                   <span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-accent/20 bg-accent/[0.07]"><svg viewBox="0 0 24 24" class="h-4 w-4 text-accent-dim" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                   <div>
                     <h4 class="font-mono text-[13px] text-heading">fresh-release quarantine</h4>
-                    <p class="mt-1 text-sm leading-relaxed text-body">A version published in the last couple of weeks gets an extra supply-chain pass. The classic attack is a hijacked maintainer account pushing a malicious release that's live for only hours, so stack-it prefers the last vetted version or waits out a quarantine window (npm's <span class="font-mono text-zinc-300">min-release-age</span>, and equivalents elsewhere).</p>
+                    <p class="mt-1 text-sm leading-relaxed text-body">A version published in the last couple of weeks gets an extra supply-chain pass. The classic attack is a hijacked maintainer account pushing a malicious release that's live for only hours, so stack-it prefers the last vetted version or waits out a quarantine window, npm's <span class="font-mono text-zinc-300">min-release-age</span> and its equivalents elsewhere.</p>
                   </div>
                 </div>
               </div>
@@ -466,7 +466,7 @@
           <div class="grid grid-cols-1 gap-7 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div>
               <h3 class="font-mono text-base tracking-tight text-heading">incompatible choices, caught</h3>
-              <p class="mt-2 max-w-[58ch] text-sm leading-relaxed text-body">When a check fails, stack-it works out whose fault it is. A wrong example it just fixes. A pin that won't resolve it bumps to the nearest patch and records. But two tools that fundamentally can't coexist is a <span class="text-zinc-200">stack fault</span>, the only thing it stops on. It won't silently swap your choice; it surfaces the conflict and brings you back to re-decide that one slot.</p>
+              <p class="mt-2 max-w-[58ch] text-sm leading-relaxed text-body">When a check fails, stack-it works out whose fault it is. A wrong example it just fixes. A pin that won't resolve it bumps to the nearest patch and flags the drift. But two tools that fundamentally can't coexist is a <span class="text-zinc-200">stack fault</span>, the only thing it stops on. It won't silently swap your choice; it surfaces the conflict and brings you back to re-decide that one slot.</p>
               <div class="mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
                 <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">slice fault &middot; auto-fix</span>
                 <span class="rounded-md border border-border-subtle bg-white/[0.03] px-2.5 py-1 text-muted">pin drift &middot; auto-fix + flag</span>
@@ -523,7 +523,7 @@ claude plugin install stack-it@fractally-claude-marketplace</pre>
 <span class="text-accent">&gt;</span> I'm starting a new editorial web project with cutting edge motion graphics for our company website, I need to decide my stack.
 <span class="text-accent">&gt;</span> verify my installed stack works
 <span class="text-accent">&gt;</span> document this project's stack</pre>
-          <p class="mt-3 text-sm leading-relaxed text-muted">One resume-aware orchestrator plus five standalone, individually callable stage skills.</p>
+          <p class="mt-3 text-sm leading-relaxed text-muted">One resume-aware orchestrator plus five stage skills you can call on their own.</p>
         </div>
       </div>
     </section>

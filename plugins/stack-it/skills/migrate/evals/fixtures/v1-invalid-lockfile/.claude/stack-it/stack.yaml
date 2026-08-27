@@ -1,0 +1,24 @@
+project:
+  description: Minimal REST API for a todo list with one persisted resource
+  type: api-service
+  platforms: [linux-server, macos]
+stack:
+  - slot: language/runtime
+    choice: Python
+    version: 3.14
+    install:
+      - python3 is already installed; verify with `python3 --version`
+    caveats: []
+    notes: Use system Python; manage the project environment with uv.
+  - slot: web framework
+    choice: FastAPI
+    version: 0.115.0
+    install: []
+    caveats: []
+    notes: null
+  - slot: test framework
+    version: 8.3.0
+    install:
+      - uv add --dev pytest httpx
+    caveats: []
+    notes: httpx provides FastAPI's TestClient transport.

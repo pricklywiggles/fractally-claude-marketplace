@@ -1,3 +1,4 @@
+format: 2
 project:
   description: Minimal React single-page app with a styled contact form
   type: web-app

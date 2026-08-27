@@ -116,6 +116,66 @@ def test_choice_missing_rejected():
     assert errs("stack", "project: {description: d, type: cli, platforms: [l]}\nstack: [{slot: a, version: '1.0', install: [x]}]")
 
 
+# --- the artifact layout stamp ---------------------------------------------
+def _format_errs(value):
+    return errs("stack", f"format: {value}\n" + VALID_STACK)
+
+
+def _assert_rejected(value):
+    e = _format_errs(value)
+    assert len(e) == 1 and "'format'" in e[0]
+
+
+def test_format_present_and_valid():
+    assert _format_errs("2") == []
+
+
+def test_format_explicit_one_passes():
+    # migrate rewrites an explicit `format: 1` in place, so it has to validate
+    assert _format_errs("1") == []
+
+
+def test_format_ahead_of_current_still_passes():
+    # the validator has no upper bound; refusing a newer layout is the skills' job
+    assert _format_errs("3") == []
+
+
+def test_format_absent_is_fine():
+    assert errs("stack", VALID_STACK) == []
+
+
+def test_format_string_rejected():
+    _assert_rejected("'2'")
+
+
+def test_format_float_rejected():
+    _assert_rejected("2.0")
+
+
+def test_format_bool_rejected():
+    _assert_rejected("true")
+
+
+def test_format_below_one_rejected():
+    _assert_rejected("0")
+
+
+def test_format_negative_rejected():
+    _assert_rejected("-1")
+
+
+def test_format_null_rejected():
+    e = _format_errs("")
+    assert len(e) == 1 and "'format'" in e[0] and "present but empty" in e[0]
+
+
+def test_format_error_does_not_short_circuit_the_rest():
+    # a bad format must not stop the stack checks: both problems have to surface
+    e = errs("stack", "format: 'x'\nproject: {description: d, type: cli, platforms: [l]}\n"
+                      "stack: [{slot: a, version: '1.0', install: [x]}]")
+    assert len(e) == 2
+
+
 # --- exit codes via the CLI ------------------------------------------------
 def _run(*args):
     return subprocess.run([sys.executable, str(HERE / "validate_yaml.py"), *args],

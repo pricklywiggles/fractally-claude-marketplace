@@ -12,6 +12,7 @@ Install and scaffold a project from an approved, version-pinned stack YAML produ
 Expect the locked stack YAML from `decide-stack`, by default at **`.claude/stack-it/stack.yaml`** (or a path the user gives):
 
 ```yaml
+format: 2
 project:
   description: ...
   type: ...
@@ -41,7 +42,7 @@ For each step:
 - **Handle interactive prompts as they come.** Installers and scaffolding tools often ask questions (project name, options, feature toggles). Answer from the project context and the YAML where the answer is clear; ask the user when it's a real preference you can't infer.
 - **Verify each step before moving on.** After each install, do a quick success check (version prints, command resolves, expected files exist). If a step fails, stop and resolve it with the user before continuing; don't plow ahead on a broken foundation.
 - **Respect the boundary.** Don't enter credentials, create accounts, log in, or modify access controls on the user's behalf. If a step needs a secret, an account, or a sign-in, hand that step to the user with clear instructions and continue once they confirm it's done.
-- **Keep the lockfile current.** When what actually gets installed diverges from the file (you had to take the nearest available patch of a pinned version, an `install` step needed adjusting to work, or a `caveat` turned out resolved or newly relevant), update `.claude/stack-it/stack.yaml` in place so it stays an accurate record of the installed stack for `scaffold-and-verify` and the user. This is for staying faithful to reality *within* each slot's chosen tool. It is **not** license to change *which tool* fills a slot: if a chosen tool can't be installed at all, stop and send the user back to `decide-stack` rather than silently substituting another.
+- **Keep the lockfile current.** When what actually gets installed diverges from the file (you had to take the nearest available patch of a pinned version, an `install` step needed adjusting to work, or a `caveat` turned out resolved or newly relevant), update `.claude/stack-it/stack.yaml` in place so it stays an accurate record of the installed stack for `scaffold-and-verify` and the user. This is for staying faithful to reality *within* each slot's chosen tool. It is **not** license to change *which tool* fills a slot: if a chosen tool can't be installed at all, stop and send the user back to `decide-stack` rather than silently substituting another. When you rewrite the file, carry the top-level `format` key through untouched; it stamps the layout of stack-it's artifacts and later stages read it to decide whether the project needs migrating.
 
 ## Finishing
 

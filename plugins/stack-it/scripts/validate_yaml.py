@@ -96,7 +96,29 @@ def _check_version(where, version, errors):
         _err(errors, f"{where}.version is '{version}' -- pin an exact version instead")
 
 
+def _check_format(doc, errors):
+    # Absent is valid: files written before the stamp existed are format 1.
+    if "format" not in doc:
+        return
+    fmt = doc["format"]
+    if fmt is None:
+        _err(
+            errors,
+            "top-level 'format' is present but empty; write an unquoted integer such as "
+            "format: 2, or remove the key to mean format 1",
+        )
+        return
+    # bool is an int subclass in Python, so `format: true` would otherwise pass.
+    if isinstance(fmt, bool) or not isinstance(fmt, int) or fmt < 1:
+        _err(
+            errors,
+            f"top-level 'format' must be an integer >= 1 (got {type(fmt).__name__} {fmt!r}); "
+            "write an unquoted integer, e.g. format: 2",
+        )
+
+
 def validate_stack(doc, errors):
+    _check_format(doc, errors)
     _check_project(doc, errors)
     stack = doc.get("stack")
     if not isinstance(stack, list) or not stack:

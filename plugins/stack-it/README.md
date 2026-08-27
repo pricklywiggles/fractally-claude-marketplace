@@ -17,9 +17,15 @@ identify-stack-slots → decide-stack → install-stack → scaffold-and-verify 
 | `decide-stack` | Research and pick version-pinned, security-vetted tools for each slot. |
 | `install-stack` | Install the locked stack. |
 | `scaffold-and-verify` | Build the smallest vertical slice that exercises every tool and run it green (build, lint, tests, dev server, browser console). |
-| `document-stack` | Document the stack for agents (CLAUDE.md) and humans (README). |
+| `document-stack` | Document the stack for agents (`docs/stack.md`, pointed at from `AGENTS.md`) and humans (README). |
 
 Each stage is usable on its own; `setup-stack` is for taking the whole journey in one pass.
+
+## Utility skills
+
+| Skill | Role |
+|---|---|
+| `migrate` | Bring a project's stack-it artifacts from an older `format` to the current one. Called by `document-stack` when it finds an old layout, and callable on its own. It restructures files and pointers. It never generates or refreshes stack content: the most it writes is the old CLAUDE.md text moved into `docs/stack.md` as a placeholder when there's no lockfile. |
 
 ## The living lockfile
 
@@ -53,6 +59,7 @@ slots:
 **stack** (`--stage stack`):
 
 ```yaml
+format: 2                                    # layout version of stack-it's files; decide-stack always writes it, absent (older files) means 1
 project: { description, type, platforms }   # as above
 stack:                                       # list order IS the install order
   - slot: <non-empty string>
@@ -62,6 +69,8 @@ stack:                                       # list order IS the install order
     caveats: [<list>]                         # [] for none
     notes: <string or null>                   # e.g. the source doc URL the install steps came from (provenance)
 ```
+
+`format` stamps the layout of everything stack-it writes, which is not the plugin's version and not the stack's. `decide-stack` always writes the current value, the later stages carry it through when they rewrite the file, and `migrate` brings a project that's behind up to it. Only files written before the stamp existed lack the key, and those are format 1.
 
 The validator checks **shape, not meaning**: it won't catch a `slot` that's accidentally a product name, or a wrong-but-valid version. Those stay the skills' responsibility.
 

@@ -92,6 +92,7 @@ Once approved, write the final YAML. **Order the `stack` list in the sequence th
 Pin the exact versions that were researched and approved: the cooldown-aware choices from Phase 1, not blindly the newest release. The `install:` steps are the verbatim, version-specific commands Phase 2 fetched from each tool's official docs, and each entry's `notes` carries the source doc URL so install-stack and the user can re-verify. Pinning keeps the install reproducible and matching exactly what was vetted.
 
 ```yaml
+format: 2
 project:
   description: ...
   type: ...
@@ -106,6 +107,8 @@ stack:
       - <vulnerability / known issue / supply-chain note>   # empty list if none
     notes: <anything the install stage needs to know; include the source doc URL for provenance, or null>
 ```
+
+`format` is the layout version of the files stack-it writes, not the plugin's version and not the stack's. Write `format: 2` as the first top-level key. Later stages read it to tell whether a project's artifacts are laid out the current way or need `migrate` to bring them forward, and they preserve it when they rewrite the file.
 
 Save it to **`.claude/stack-it/stack.yaml`** in the project (creating `.claude/stack-it/` if needed, the pipeline's home for its generated files), then validate with `${CLAUDE_PLUGIN_ROOT}/scripts/validate_yaml.py --stage stack .claude/stack-it/stack.yaml` so a schema mistake is caught now, not in the install stage. This file is the handoff to `install-stack`, and the later stages read and update it in place, so it stays the single source of truth for the stack. If the user ever sends you back here to re-pick a slot (because `install-stack` or `scaffold-and-verify` hit a tool that can't work), edit this same file with the new choice rather than starting a fresh one.
 

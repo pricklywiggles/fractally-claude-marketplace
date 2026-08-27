@@ -1,29 +1,60 @@
 ---
 name: document-stack
-description: Use this skill to document a project's tech stack so both the agents working in the repo (in CLAUDE.md) and the humans reading it (in the README) know what it's built on and how to run it. It documents from the stack-it lockfile (`.claude/stack-it/stack.yaml`) when one exists, and otherwise infers the stack by analyzing the codebase. Use it proactively whenever someone wants their stack written down, even if they don't name the files. Phrasings like "document my stack", "add a tech stack section to the readme", "write up what this project uses for Claude/agents", "put my dependencies in CLAUDE.md", "generate a tech-stack doc", "what's this project built with, document it", or running it as the final step after install-stack / scaffold-and-verify to capture the result. It writes an agent-facing stack summary (tools, pinned versions, how to build/test/lint/run, conventions, caveats) into CLAUDE.md and a human-facing Tech Stack + Getting Started into the README, both inside a refreshable managed block so re-running resyncs cleanly. It does NOT install, choose, research, or verify tools (those are install-stack, decide-stack, scaffold-and-verify), and it does not edit the stack YAML: here the YAML is read-only input. Not for writing general project prose, API docs, or code comments.
+description: Use this skill to document a project's tech stack so both the agents working in the repo and the humans reading it know what it's built on and how to run it. The agent-facing reference goes to `docs/stack.md`, reached by a one-line pointer in `AGENTS.md` so any coding agent that reads AGENTS.md picks it up, and Claude Code reaches it through a thin `CLAUDE.md` that imports `@AGENTS.md`; the human-facing Tech Stack + Getting Started goes to the README. It documents from the stack-it lockfile (`.claude/stack-it/stack.yaml`) when one exists, and otherwise infers the stack by analyzing the codebase. Use it proactively whenever someone wants their stack written down, even if they don't name the files. Phrasings like "document my stack", "add a tech stack section to the readme", "write up what this project uses for Claude/agents", "put my dependencies in AGENTS.md", "document my stack for any agent", "write a stack doc my coding agents will read", "generate a tech-stack doc", "what's this project built with, document it", or running it as the final step after install-stack / scaffold-and-verify to capture the result. The agent doc carries the tools, pinned versions, how to build/test/lint/run, conventions, and caveats; `docs/stack.md` is rewritten whole on every run and the README's section lives in a refreshable managed block, so re-running resyncs cleanly. Generated stack content never goes into CLAUDE.md. It does NOT install, choose, research, or verify tools (those are install-stack, decide-stack, scaffold-and-verify), it does not edit the stack YAML (here the YAML is read-only input), and it does not restructure an older stack-it layout itself (that's the migrate skill). Not for writing general project prose, API docs, or code comments.
 ---
 
 # Document Stack
 
-Turn what a project is built on into documentation that serves its two readers: the **agents** that will work in the repo (via CLAUDE.md) and the **humans** who need to get it running (via the README). Document from the stack-it lockfile when the pipeline produced one; infer the stack from the codebase when it didn't. Either way, derive both documents from one resolved picture of the stack so they can't drift apart, and write them so a later run refreshes them cleanly.
+Turn what a project is built on into documentation that serves its two readers: the **agents** that will work in the repo (via `AGENTS.md`, which points at `docs/stack.md`) and the **humans** who need to get it running (via the README). Document from the stack-it lockfile when the pipeline produced one; infer the stack from the codebase when it didn't. Either way, derive both documents from one resolved picture of the stack so they can't drift apart, and write them so a later run refreshes them cleanly.
 
-## Step 1: Get the stack (lockfile first, else infer)
+## Step 1: Check the layout format
 
-**If `.claude/stack-it/stack.yaml` exists, that's the source of truth.** Validate it with `${CLAUDE_PLUGIN_ROOT}/scripts/validate_yaml.py --stage stack .claude/stack-it/stack.yaml`, then read the `project`, each slot's `choice`/`version`/`caveats`/`notes`, and the install order. It's already pinned and vetted, so trust it. A quick sanity glance at the codebase is still worth it: if the lockfile and the actual code obviously disagree (a tool the YAML lists is nowhere in the manifests, or vice versa), flag the discrepancy to the user rather than documenting a fiction. But don't re-derive what the lockfile already states.
+Do this before reading the stack. Writing format 2 files over a format 1 project leaves it with two layouts at once, and the fix costs more than the check.
+
+### Detect the format
+
+Read every signal, then take the highest. Don't stop at the first one you find.
+
+- `docs/stack.md`: it's stack-it's only if it's a regular file, not a symlink, whose **first line is the generated header** carrying `format N`. Read N off that line. A `docs/stack.md` without that header is not ours: stop, show the user what's in it, and ask before touching it.
+- `.claude/stack-it/stack.yaml`: its top-level `format` key. A lockfile with no key reads as 1.
+- `CLAUDE.md`: a `<!-- stack-it:stack start -->` marker reads as 1. Read `CLAUDE.md` from disk, since Claude Code strips HTML comments from loaded context and the marker won't be visible in a `CLAUDE.md` you already have in context. The start marker alone is enough to read the signal; removing the block still needs the full pair (see **Marker integrity**).
+
+No signal at all means nothing has been written yet, so there's nothing to migrate.
+
+The current format is **2**. If **any** signal reads higher than 2, stop and write nothing: a newer stack-it wrote this project, so tell the user to upgrade the plugin rather than downgrade their files. A newer `decide-stack` can stamp `format: 3` on the lockfile while `docs/stack.md` still says 2, which is why the highest signal wins and the first hit doesn't. Otherwise the project's format is the highest signal you read.
+
+**Marker integrity.** Before removing or replacing anything between markers, confirm the file holds exactly one `<!-- stack-it:stack start -->` followed by exactly one `<!-- stack-it:stack end -->`. If the end marker is missing, the two are out of order, or there's more than one pair, remove and replace nothing: show the user the offending lines and stop. No markers at all means there's no block: skip the removal step and continue.
+
+This detection is shared: `document-stack` Step 1 and `migrate` Step 1 must carry the same rules. Change them in both places or in neither.
+
+### If the project is behind
+
+Invoke the **`stack-it:migrate`** skill, let it restructure the files and pointers, and carry on here once it returns. Don't restructure an old layout yourself. `migrate` ends its report with either `migrated to N` or `stopped: <reason>`. If it stopped, stop too and relay its reason; a half-migrated project is not one to write into.
+
+### Verify the layout at format 2
+
+A format number says which layout the project uses, not that every piece of it landed. When the format is 2, check all of it: no `<!-- stack-it:stack start -->` block in `CLAUDE.md`, the pointer present in `AGENTS.md`, the bridge present (or a recorded decline, or a symlink exception), and the `format` stamp present when `stack.yaml` exists. An `AGENTS.md` symlinked outside the project is a reported layout exception rather than a missing piece: never write through it, say that its target carries no pointer, and carry on. Content missing from inside `docs/stack.md` is not part of this check; regenerating that is `document-stack`'s job, never `migrate`'s.
+
+If any other piece is missing, invoke `stack-it:migrate`, which re-runs only the missing step, and carry on once it returns; if it reports `stopped:`, stop too and relay the reason. A leftover old block at format 2 is migrate's to remove. Don't re-run a migration step yourself: restructuring is not this skill's job, and the lockfile stamp is not this skill's to write.
+
+## Step 2: Get the stack (lockfile first, else infer)
+
+**If `.claude/stack-it/stack.yaml` exists, that's the source of truth.** Validate it with `${CLAUDE_PLUGIN_ROOT}/scripts/validate_yaml.py --stage stack .claude/stack-it/stack.yaml`. If validation fails, stop and show the user the errors; never fall back to inferring from the codebase when a lockfile exists, because a broken lockfile is a thing to fix, not to route around. On a pass, read the `project`, each slot's `choice`/`version`/`caveats`/`notes`, and the install order. It's already pinned and vetted, so trust it. A quick sanity glance at the codebase is still worth it: if the lockfile and the actual code obviously disagree (a tool the YAML lists is nowhere in the manifests, or vice versa), flag the discrepancy to the user rather than documenting a fiction. But don't re-derive what the lockfile already states.
 
 **If there's no lockfile, the user skipped the pipeline and just wants their existing stack documented, so infer it from the codebase.** This is the harder path and the inference can be wrong, so gather evidence before concluding:
 
 - **Manifests and lockfiles** are the spine: `package.json` + the lockfile, `pyproject.toml`/`requirements.txt` + `uv.lock`/`poetry.lock`, `go.mod`, `Cargo.toml`, `Gemfile.lock`, etc. Take exact versions from the lockfiles, not the loose ranges in the manifest.
 - **Config files** reveal the tools and how they're wired: bundler/build config, test config, linter/formatter config, `tsconfig`, CSS framework config, container/CI files, ORM/migration config.
 - **The code itself** confirms what's actually used (imports, framework entry points) versus merely installed.
+- **A placeholder `docs/stack.md` that `migrate` just rescued**, when the project came from format 1 with no lockfile. That text is what an earlier run concluded about this stack, so read it as evidence alongside the manifests. It's still a claim to check, not a fact to copy: reconcile it with what the code shows, and overwrite it once the user confirms.
 
 From that evidence, name the stack the way the pipeline would: language/runtime, framework(s), key libraries, test/lint/build tooling, database/ORM, and anything else load-bearing, each with the version you found. **Present the inferred stack to the user and confirm it before writing**, calling out anything you're unsure about; inference is a best guess, and the user can correct a wrong call faster than they can un-publish a wrong doc.
 
-## Step 2: Write for two audiences
+## Step 3: Write for two audiences
 
 Both documents describe the same stack, but their readers need different things. Write each for its reader rather than pasting one block into both.
 
-**CLAUDE.md (agent-facing).** An agent reading this is about to make a change and needs to act correctly. Give it:
+**`docs/stack.md` (agent-facing).** An agent reading this is about to make a change and needs to act correctly. Give it:
 - Each tool and its **pinned version** and role (one line each).
 - The exact commands to **build, test, lint/format, and run** the dev server or app; an agent shouldn't have to guess the test command.
 - **Conventions** the tools imply that an agent would otherwise get wrong (e.g. "Tailwind v4 is wired via the Vite plugin, no `tailwind.config.js`"; "ESLint uses flat config").
@@ -31,33 +62,78 @@ Both documents describe the same stack, but their readers need different things.
 
 Keep it concise and factual; this is reference an agent consults, not prose it reads top to bottom.
 
+**Why the reference lives in its own file.** A root instruction file is loaded at the start of every session, so it should stay short and point at the long-form material instead of carrying it. `AGENTS.md` is the file the ecosystem already reads: Codex, Cursor, Copilot, Gemini CLI, Zed, Amp and Windsurf pick it up natively. Codex caps the combined `AGENTS.md` chain at 32 KiB, so a full stack dump there crowds out the project's real rules, and one pointer line survives that budget. Agents with no import syntax see the literal path and open the file when they need it. Claude Code is the exception: it loads `CLAUDE.md`, not `AGENTS.md`, at session start, so a thin bridge gives it the same content. `CLAUDE.md` imports `@AGENTS.md`, which imports `@docs/stack.md`, two of the four import hops Claude Code allows, and the reference is loaded at launch.
+
 **README (human-facing).** A person here wants to understand and run the project. Give them:
 - A **Tech Stack** section: the major choices at a glance, each with a few words on what it's for.
 - A **Getting Started** section: prerequisites (runtime version, package manager), install, run the dev server, run tests, build. Use the real commands for this stack.
 
 If there's no README, create one with these sections.
 
-## Step 3: Write into a refreshable managed block
+## Step 4: Write the files
 
-`install-stack` and `scaffold-and-verify` update the lockfile, so this skill will be re-run after the stack changes; the documentation must update in place without clobbering anything a human wrote. Put the generated content between markers and replace only what's inside them:
+### (a) Write docs/stack.md
+
+Write here only when Step 1 established the file is stack-it's: it doesn't exist yet, or it's a regular file whose first line is the generated header. A `docs/stack.md` you don't own is never overwritten. When you do own it, overwrite the whole file, creating `docs/` if it isn't there. The first line is the header, then a blank line, then the content from Step 3:
+
+```
+> Generated by stack-it document-stack, format 2. Edits are overwritten on the next run.
+```
+
+Detection reads `format N` off this line; keep that phrase. No markers here. The file is entirely generated, so there's nothing of the user's to protect inside it.
+
+### (b) Resolve the pointer files first
+
+Before the pointer step and the bridge step, resolve `AGENTS.md` and `CLAUDE.md` to the files they actually are.
+
+- They resolve to the same file, whichever direction the symlink runs: treat them as one file. Write the pointer line once and skip the bridge step entirely, because a file that *is* `AGENTS.md` must never contain `@AGENTS.md`.
+- `CLAUDE.md` is a symlink to anything other than `AGENTS.md` (a dotfiles repo, a file shared outside the project): that's an intentional bridge exception. Never write through it. Report where it points and that it doesn't import `AGENTS.md`, and offer to place the import only if the user asks.
+- `AGENTS.md` is a symlink to a file outside the project: same rule, don't write through it.
+
+### (c) Ensure the AGENTS.md pointer
+
+`AGENTS.md` gets exactly one line from stack-it, verbatim:
+
+```
+Before adding a dependency or running the build, test, or lint toolchain, read the stack reference: @docs/stack.md
+```
+
+This is a presence check, not a managed block. If `AGENTS.md` already contains `@docs/stack.md` outside backticks, do nothing, even if the sentence around it has been reworded; the pointer is there and the wording is the user's. Otherwise append the line, creating `AGENTS.md` if it's missing and putting a blank line before it if the file already has content. Never add markers to `AGENTS.md`, and never wrap the path in backticks or a code fence: a backticked path isn't an import, so Claude Code would skip it.
+
+### (d) Ensure the CLAUDE.md bridge
+
+Claude Code loads `CLAUDE.md`, not `AGENTS.md`, at session start, so it needs a one-line file that imports the other. Take the first case that matches:
+
+- `CLAUDE.md` doesn't exist, or holds nothing but whitespace: create it containing the single line `@AGENTS.md`. If any text remains, take one of the cases below instead.
+- `CLAUDE.md` is a symlink to `AGENTS.md`, or already contains `@AGENTS.md` outside backticks: leave it alone.
+- `CLAUDE.md` already contains `@docs/stack.md` outside backticks (the fallback from an earlier declined import): leave it alone.
+- `CLAUDE.md` exists with none of those: ask once, "add `@AGENTS.md` at the top of CLAUDE.md? If not, I'll append the pointer line instead so Claude Code still reads docs/stack.md." On yes, add that one line at the top. On no, append the pointer line, under the same presence check and with no markers.
+
+`CLAUDE.md` never receives generated stack content. The most it ever gets is that one import line or that one pointer line.
+
+### (e) Refresh the README's managed block
+
+`install-stack` and `scaffold-and-verify` update the lockfile, so this skill will be re-run after the stack changes, and the README section must update in place without clobbering anything a human wrote around it. Put the generated content between markers and replace only what's inside them:
 
 ```
 <!-- stack-it:stack start -->
 > Generated by stack-it's document-stack. Edits inside this block are overwritten on the next run.
 
-...generated stack documentation...
+...generated Tech Stack + Getting Started...
 <!-- stack-it:stack end -->
 ```
 
-On each run: if the markers already exist in the file, replace only the content between them; if they don't, insert the block in a sensible place (in CLAUDE.md, under a top-level stack/architecture heading; in the README, after the title and intro, before deeper sections). Everything outside the markers (the rest of CLAUDE.md, the rest of the README) stays exactly as the user left it. This is what makes re-running safe and keeps the docs in sync with the lockfile.
+Apply **Marker integrity** from Step 1 to the README before you replace anything in it. The rule is the same one that governs the CLAUDE.md block.
 
-## Step 4: Report
+On each run: if the pair already exists in the README, replace only the content between them; if neither marker is there, insert the block after the title and intro, before the deeper sections. Everything outside the markers stays exactly as the user left it, and there's exactly one marker pair, never a second block appended. The markers belong to the README alone. `docs/stack.md` is a whole-file overwrite, and the two pointer files get presence-checked lines.
 
-Tell the user what you did: which source you used (lockfile or inferred-from-code, and if inferred, that they confirmed it), which files you wrote or created, and any discrepancy or caveat you surfaced. If you inferred the stack, remind them the result is only as accurate as the codebase signals and they should correct anything you got wrong.
+## Step 5: Report
+
+Tell the user what you did: which source you used (lockfile or inferred-from-code, and if inferred, that they confirmed it), whether `migrate` ran and what it moved, and every file you wrote or created, one line each. That's `docs/stack.md` (written or overwritten), `AGENTS.md` (created, pointer appended, or already pointing), `CLAUDE.md` (created as a bridge, left alone, or the declined-import fallback), and the README (block refreshed or inserted). Surface any discrepancy or caveat you found. If you inferred the stack, remind them the result is only as accurate as the codebase signals and they should correct anything you got wrong.
 
 ## Boundaries
 
-This skill documents; it does not install, choose, research, or verify tools (those are `install-stack`, `decide-stack`, and `scaffold-and-verify`). It treats the stack YAML as read-only input and never edits it (keeping the lockfile current is the install/verify stages' job). And it documents the *stack*, not the whole project: it doesn't write general prose, API references, or code comments.
+This skill documents; it does not install, choose, research, or verify tools (those are `install-stack`, `decide-stack`, and `scaffold-and-verify`). It treats the stack YAML as read-only input and never edits it (keeping the lockfile current is the install/verify stages' job). It doesn't restructure an older stack-it layout either: it detects the format and hands that to `migrate`. And it documents the *stack*, not the whole project: it doesn't write general prose, API references, or code comments.
 
 ## Bundled resources
 

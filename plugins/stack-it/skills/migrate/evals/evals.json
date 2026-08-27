@@ -1,6 +1,6 @@
 {
   "skill_name": "migrate",
-  "note": "Layout migration, not content generation. Each fixture is a project at a different stack-it format; the skill must detect the format, restructure only the files the hop calls for, and leave every human-written byte alone. It never generates or refreshes stack content: the most it writes is the old CLAUDE.md text moved into docs/stack.md as a placeholder when there is no lockfile, which document-stack then regenerates.",
+  "note": "Layout migration, not content generation. Each fixture is a project at a different stack-it format; the skill must detect the format, restructure only the files the hop calls for, and leave every human-written byte alone. It never generates or refreshes stack content: the most it writes is the old CLAUDE.md text moved into docs/stack.md as a placeholder when there is no lockfile, which document-stack then regenerates. Fixtures for stop cases (broken-markers, invalid-lockfile) hold only the files that trigger the stop, since the checks halt the hop before any write.",
   "evals": [
     {
       "id": 0,

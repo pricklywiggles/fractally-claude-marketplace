@@ -1,6 +1,6 @@
 {
   "skill_name": "document-stack",
-  "note": "Every fixture is a project at some layout state. The skill must resolve the format before it writes anything, hand an old layout to stack-it:migrate rather than restructuring it, and keep generated stack content out of CLAUDE.md in every case.",
+  "note": "Every fixture is a project at some layout state. The skill must resolve the format before it writes anything, hand an old layout to stack-it:migrate rather than restructuring it, and keep generated stack content out of CLAUDE.md in every case. Fixtures for stop cases (foreign-stack-doc, format-ahead-of-plugin) hold only the files that trigger the stop, since the skill halts in Step 1 before it reads the stack.",
   "evals": [
     {
       "id": 0,
@@ -47,7 +47,7 @@
       "name": "foreign-stack-doc",
       "fixture": "proj-foreign-stack-doc",
       "prompt": "Document this project's stack. The project is at PROJECT_DIR.",
-      "expected_output": "docs/stack.md exists but was written by hand: its first line is '# Our stack, and why', not the generated header. The ownership rule must STOP the run there and ask the user before touching the file, showing what's in it. It must NOT go on to use the other signals, which both read 1 (the lockfile has no format key, CLAUDE.md carries a marker block) and would start a migration. Nothing is written: docs/stack.md is not overwritten, the CLAUDE.md block is still there with the House rules and Deployment notes around it, no AGENTS.md is created, no README block is touched. A cut CLAUDE.md block is the visible sign of the failure this pins, which is clobbering a human's hand-maintained stack document.",
+      "expected_output": "docs/stack.md exists but was written by hand: its first line is '# Our stack, and why', not the generated header. The ownership rule must STOP the run there and ask the user before touching the file, showing what's in it. It must NOT go on to use the other signals, which both read 1 (the lockfile has no format key, CLAUDE.md carries a marker block) and would start a migration. Nothing is written: docs/stack.md is not overwritten, the CLAUDE.md block is still there with the House rules and Deployment notes around it, no AGENTS.md is created, no README is created. A cut CLAUDE.md block is the visible sign of the failure this pins, which is clobbering a human's hand-maintained stack document.",
       "files": []
     },
     {

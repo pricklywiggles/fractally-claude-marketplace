@@ -57,7 +57,7 @@ Don't redo finished work. Before running anything, figure out where the project 
 
 - `.claude/stack-it/slots.yaml`: have the slots been identified? (validate with `${CLAUDE_PLUGIN_ROOT}/scripts/validate_yaml.py --stage slots` if present)
 - `.claude/stack-it/stack.yaml`: have the tools been decided and locked? (validate with `${CLAUDE_PLUGIN_ROOT}/scripts/validate_yaml.py --stage stack`)
-- the project itself: are the locked tools actually installed (manifests and lockfiles present, dependencies resolved)? is there a verification slice, and does it pass? do `docs/stack.md`, the `AGENTS.md` pointer to it, and the `README` block already exist? An old-format project instead has a `<!-- stack-it:stack start -->` block in `CLAUDE.md`. That is documented on the **old layout**, which is not finished work: read `CLAUDE.md` from disk to spot it, since Claude Code strips HTML comments from loaded context.
+- the project itself: are the locked tools actually installed (manifests and lockfiles present, dependencies resolved)? is there a verification slice, and does it pass? does `docs/stack.md` already exist with its `<!-- stack-it:stack start/end -->` pair and real content between the markers, along with the `AGENTS.md` pointer to it and the `README` block? A section whose first line is `Moved from CLAUDE.md by migrate; run document-stack to regenerate.` or `Placeholder written by migrate; run document-stack to fill this in.` is a placeholder `migrate` left for `document-stack`, so the documenting stage hasn't run. An old-format project instead has a `<!-- stack-it:stack start -->` block in `CLAUDE.md`. That is documented on the **old layout**, which is not finished work: read `CLAUDE.md` from disk to spot it, since Claude Code strips HTML comments from loaded context. A block sitting there alongside an otherwise complete format-2 layout is a different animal: a leftover from a migration that did not finish, and not finished work either.
 
 Map what you find to the first **unfinished** stage:
 
@@ -67,7 +67,7 @@ Map what you find to the first **unfinished** stage:
 - installed but no passing slice → start at **scaffold-and-verify**
 - verified but undocumented → start at **document-stack**
 - verified and documented, but on the old layout (a `<!-- stack-it:stack start -->` block in `CLAUDE.md`, no `docs/stack.md`) → start at **document-stack**, which calls `migrate` to restructure before it refreshes
-- all done, meaning `docs/stack.md`, the `AGENTS.md` pointer, the README block, **and** `format: 2` in `stack.yaml` → say so; offer to re-run a specific stage. A missing stamp is not done: route to **document-stack**, which calls `migrate` to finish the layout
+- all done, meaning `docs/stack.md` with its `<!-- stack-it:stack start/end -->` pair, a generated section that does **not** open with a migrate placeholder or stub line, no `<!-- stack-it:stack start -->` block left in `CLAUDE.md`, the `AGENTS.md` pointer, the README block, **and** `format: 2` in `stack.yaml` → say so; offer to re-run a specific stage. A missing stamp is not done, and neither is a placeholder section or a leftover block: all three route to **document-stack**, which calls `migrate` to finish the layout and then writes the content
 
 When the state is ambiguous (a `stack.yaml` exists and some deps look installed, but you can't tell it's complete), tell the user what you found and **confirm the entry stage** rather than guessing. A brand-new project with none of these artifacts starts at the top.
 

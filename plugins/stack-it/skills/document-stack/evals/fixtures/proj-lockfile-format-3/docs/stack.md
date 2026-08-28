@@ -3,16 +3,11 @@
 <!-- stack-it:stack start -->
 # Stack
 
-- Python 3.12: language/runtime
-- FastAPI 0.110.0: web framework
+- Python 3.14.3: language/runtime
+- FastAPI 0.115.0: web framework
 - SQLModel 0.0.22: ORM
 
 ## Commands
 
-- Test: `pytest`
+- Test: `uv run pytest`
 <!-- stack-it:stack end -->
-
-## Team notes
-
-- Staging runs behind the shared nginx box; ask @platform-team before changing the port.
-- `scripts/seed.py` is safe to re-run: it truncates the tables first.

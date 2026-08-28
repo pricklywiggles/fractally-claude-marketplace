@@ -1,0 +1,66 @@
+project:
+  description: Internal dashboard for browsing and exporting orders
+  type: web-app
+  platforms: [browser]
+stack:
+  - slot: language/runtime
+    choice: Node.js
+    version: 22.14.0
+    install:
+      - node is already installed; verify with `node --version`
+    caveats:
+      - The build box pins 22.14.0; a local Node on a different major will resolve different transitive deps.
+    notes: null
+  - slot: package manager
+    choice: pnpm
+    version: 10.4.1
+    install:
+      - corepack enable pnpm
+      - pnpm --version
+    caveats: []
+    notes: null
+  - slot: web framework
+    choice: Next.js
+    version: 15.2.0
+    install:
+      - pnpm create next-app@15.2.0 . --ts --app --tailwind --eslint
+    caveats:
+      - Next 15 requires Node 18.18+; the App Router is the default and the Pages Router is not wired up here.
+    notes: https://nextjs.org/docs/app/getting-started/installation
+  - slot: UI library
+    choice: React
+    version: 19.0.0
+    install:
+      - provided by the Next.js template; verify it resolves to 19.x
+    caveats: []
+    notes: null
+  - slot: language
+    choice: TypeScript
+    version: 5.7.3
+    install:
+      - provided by the Next.js template
+    caveats: []
+    notes: null
+  - slot: CSS framework
+    choice: Tailwind CSS
+    version: 4.0.9
+    install:
+      - provided by the Next.js template with the --tailwind flag
+    caveats:
+      - Tailwind v4 is wired through the PostCSS plugin the template adds; there is no tailwind.config.js.
+    notes: https://tailwindcss.com/docs/installation/framework-guides/nextjs
+  - slot: test framework
+    choice: Vitest
+    version: 3.0.7
+    install:
+      - pnpm add -D vitest jsdom @testing-library/react
+    caveats:
+      - Component tests need the jsdom environment; the default node environment has no document.
+    notes: https://vitest.dev/guide/environment
+  - slot: linter
+    choice: ESLint
+    version: 9.21.0
+    install:
+      - provided and configured by the Next.js template; verify `pnpm lint` runs
+    caveats: []
+    notes: null

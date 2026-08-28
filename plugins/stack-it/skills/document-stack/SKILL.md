@@ -1,11 +1,11 @@
 ---
 name: document-stack
-description: Use this skill to document a project's tech stack so both the agents working in the repo and the humans reading it know what it's built on and how to run it. The agent-facing reference goes to `docs/stack.md`, reached by a one-line pointer in `AGENTS.md` so any coding agent that reads AGENTS.md picks it up, and Claude Code reaches it through a thin `CLAUDE.md` that imports `@AGENTS.md`; the human-facing Tech Stack + Getting Started goes to the README. It documents from the stack-it lockfile (`.claude/stack-it/stack.yaml`) when one exists, and otherwise infers the stack by analyzing the codebase. Use it proactively whenever someone wants their stack written down, even if they don't name the files. Phrasings like "document my stack", "add a tech stack section to the readme", "write up what this project uses for Claude/agents", "put my dependencies in AGENTS.md", "document my stack for any agent", "write a stack doc my coding agents will read", "generate a tech-stack doc", "what's this project built with, document it", or running it as the final step after install-stack / scaffold-and-verify to capture the result. The agent doc carries the tools, pinned versions, how to build/test/lint/run, conventions, and caveats; in `docs/stack.md` only the section between the `<!-- stack-it:stack start/end -->` markers is regenerated and anything below the end marker is preserved, and the README's section lives in a refreshable managed block, so re-running resyncs cleanly. Generated stack content never goes into CLAUDE.md. It does NOT install, choose, research, or verify tools (those are install-stack, decide-stack, scaffold-and-verify), it does not edit the stack YAML (here the YAML is read-only input), and it does not restructure an older stack-it layout itself (that's the migrate skill). Not for writing general project prose, API docs, or code comments.
+description: Use this skill to document a project's tech stack so both the agents working in the repo and the humans reading it know what it's built on and how to run it. The agent-facing reference is two files: a short `docs/stack.md` that every agent loads through a one-line pointer in `AGENTS.md`, and `docs/stack-notes.md` that any agent opens on demand for the detail behind each pin, the wiring, and the notes carried from earlier docs. Claude Code reaches the loaded one through a thin `CLAUDE.md` that imports `@AGENTS.md`; the human-facing Tech stack + Getting started goes to the README. It documents from the stack-it lockfile (`.claude/stack-it/stack.yaml`) when one exists, and otherwise infers the stack by analyzing the codebase. Use it proactively whenever someone wants their stack written down, even if they don't name the files. Phrasings like "document my stack", "add a tech stack section to the readme", "write up what this project uses for Claude/agents", "put my dependencies in AGENTS.md", "document my stack for any agent", "write a stack doc my coding agents will read", "generate a tech-stack doc", "what's this project built with, document it", or running it as the final step after install-stack / scaffold-and-verify to capture the result. The loaded file carries the commands, a two-column pin table, and the rules an agent gets wrong without being told; the notes file carries everything behind them. In both files only the section between the `<!-- stack-it:stack start/end -->` markers is regenerated and anything below the end marker is preserved, and the README's section lives in a refreshable managed block, so re-running resyncs cleanly. Generated stack content never goes into CLAUDE.md. It does NOT install, choose, research, or verify tools (those are install-stack, decide-stack, scaffold-and-verify), it does not edit the stack YAML (here the YAML is read-only input), and it does not restructure an older stack-it layout itself (that's the migrate skill). Not for writing general project prose, API docs, or code comments.
 ---
 
-# Document Stack
+# Document stack
 
-Turn what a project is built on into documentation that serves its two readers: the **agents** that will work in the repo (via `AGENTS.md`, which points at `docs/stack.md`) and the **humans** who need to get it running (via the README). Document from the stack-it lockfile when the pipeline produced one; infer the stack from the codebase when it didn't. Either way, derive both documents from one resolved picture of the stack so they can't drift apart, and write them so a later run refreshes them cleanly.
+Turn what a project is built on into documentation that serves its two readers: the **agents** that will work in the repo (via `AGENTS.md`, which points at `docs/stack.md`, which points at `docs/stack-notes.md`) and the **humans** who need to get it running (via the README). Document from the stack-it lockfile when the pipeline produced one; infer the stack from the codebase when it didn't. Either way, derive every document from one resolved picture of the stack so they can't drift apart, and write them so a later run refreshes them cleanly.
 
 ## Step 1: Check the layout format
 
@@ -13,9 +13,11 @@ Do this before reading the stack. Writing format 2 files over a format 1 project
 
 ### Detect the format
 
-Read every signal, then take the highest. Don't stop at the first one you find.
+**Ownership comes first, before any signal is read.** `docs/stack.md` and `docs/stack-notes.md` are stack-it's only if each is a regular file whose **first line starts with** `> Generated by stack-it document-stack, format N`. Match on that prefix alone: the sentence after it changed between versions, so a whole-line comparison would read every older file as somebody else's. A symlink at either path, or a first line that doesn't start that way, is not ours: stop there, show the user what is in it, and ask before touching anything. The order matters. A lockfile with no `format` key sitting beside a hand-written `docs/stack.md` reads as a format 1 project, and acting on that signal would start a migration across the very file the ownership rule exists to protect.
 
-- `docs/stack.md`: it's stack-it's only if it's a regular file, not a symlink, whose **first line starts with** `> Generated by stack-it document-stack, format N`. Read N off that line, and match on that prefix alone: the sentence after it changed between versions, so a whole-line comparison would read every older file as somebody else's. A first line that doesn't start that way is not ours: stop, show the user what's in it, and ask before touching it.
+Once both docs files are ours or absent, read every signal, then take the highest. Don't stop at the first one you find.
+
+- `docs/stack.md` and `docs/stack-notes.md`: the `N` on the header line of each owned file.
 - `.claude/stack-it/stack.yaml`: its top-level `format` key. A lockfile with no key reads as 1.
 - `CLAUDE.md`: a `<!-- stack-it:stack start -->` marker reads as 1. Read `CLAUDE.md` from disk, since Claude Code strips HTML comments from loaded context and the marker won't be visible in a `CLAUDE.md` you already have in context. The start marker alone is enough to read the signal; removing the block still needs the full pair (see **Marker integrity**). A marker inside a fenced code block is not a signal, the same as in **Marker integrity**.
 
@@ -23,21 +25,21 @@ No signal at all means nothing has been written yet, so there's nothing to migra
 
 The current format is **2**. If **any** signal reads higher than 2, stop and write nothing: a newer stack-it wrote this project, so tell the user to upgrade the plugin rather than downgrade their files. A newer `decide-stack` can stamp `format: 3` on the lockfile while `docs/stack.md` still says 2, which is why the highest signal wins and the first hit doesn't. Otherwise the project's format is the highest signal you read.
 
-**Marker integrity.** Before removing or replacing anything between markers, confirm the file holds exactly one `<!-- stack-it:stack start -->` followed by exactly one `<!-- stack-it:stack end -->`. Markers inside a fenced code block don't count; those are an example of a block, not a block. If a marker of either kind is there without its partner, the two are out of order, or there's more than one pair, remove and replace nothing: show the user the offending lines and stop. No markers at all means there's no block: skip the removal step and continue. This governs every file stack-it replaces content in: `docs/stack.md`, `CLAUDE.md`, and the README.
+**Marker integrity.** Before removing or replacing anything between markers, confirm the file holds exactly one `<!-- stack-it:stack start -->` followed by exactly one `<!-- stack-it:stack end -->`. Markers inside a fenced code block don't count; those are an example of a block, not a block. If a marker of either kind is there without its partner, the two are out of order, or there's more than one pair, remove and replace nothing: show the user the offending lines and stop. In an owned `docs/stack.md` or `docs/stack-notes.md`, no markers at all fails the same way: format 2 always writes a pair, so a file carrying our header and no markers is malformed for this layout rather than empty of a block. Show it to the user and stop. In `CLAUDE.md` and the README, no markers means there is simply no block yet, which is normal: skip the removal step and continue. This governs every file stack-it replaces content in: `docs/stack.md`, `docs/stack-notes.md`, `CLAUDE.md`, and the README.
 
 This detection is shared: `document-stack` Step 1 and `migrate` Step 1 must carry the same rules. Change them in both places or in neither.
 
 ### If the project is behind
 
-Run **Marker integrity** on the README, and on an owned `docs/stack.md`, before you hand off. Those are the files Step 4 replaces content in, and a broken pair in either one stops this run. Finding that out after `migrate` has restructured the project leaves the layout moved and the content unwritten, which is the state this ordering exists to avoid.
+Run **Marker integrity** on the README, and on both owned docs files, before you hand off. Those are the files Step 4 replaces content in, and a bad pair in any of them, or no pair at all in an owned docs file, stops this run. Finding that out after `migrate` has restructured the project leaves the layout moved and the content unwritten, which is the state this ordering exists to avoid.
 
 Then invoke the **`stack-it:migrate`** skill, let it restructure the files and pointers, and carry on here once it returns. Don't restructure an old layout yourself. `migrate` ends its report with either `migrated to N` or `stopped: <reason>`. If it stopped, stop too and relay its reason; a half-migrated project is not one to write into.
 
 ### Verify the layout at format 2
 
-A format number says which layout the project uses, not that every piece of it landed. When the format is 2, check all of it: no `<!-- stack-it:stack start -->` block in `CLAUDE.md`, `docs/stack.md` present, the pointer present in `AGENTS.md`, the bridge present (or a recorded decline, or a symlink exception), and the `format` stamp present when `stack.yaml` exists. Run **Marker integrity** on an owned `docs/stack.md` as part of this: no markers at all is fine, since a 0.5.0 file has none and `document-stack` adds them, but a marker of either kind without its partner, a reversed pair, or a second pair stops the run with the offending lines shown. Two things are reported layout exceptions rather than missing pieces, and neither is ever written through: an `AGENTS.md` symlinked outside the project, whose target carries no pointer, and a `CLAUDE.md` symlinked outside the project that still holds the old block. Reading through such a symlink is safe, so a block at the target is still carried; only the cut is skipped, and the report says the block is still sitting there. Content missing from inside `docs/stack.md` is not part of this check; regenerating that is `document-stack`'s job, never `migrate`'s. A project with no pointer, no bridge, and no `docs/stack.md`, all three, has never been documented: nothing is broken, so a standalone `migrate` is a no-op that points the user at `document-stack`, and `document-stack` carries on and writes them for the first time.
+A format number says which layout the project uses, not that every piece of it landed. When the format is 2, check all of it. Run **Marker integrity** on every owned docs file that is present FIRST, before deciding any piece is missing: a marker of either kind without its partner, a reversed pair, a second pair, or no markers at all stops the run with the file shown. Doing that check first is what stops a malformed `docs/stack.md` from getting a freshly stubbed sibling written beside it. Then check the rest: no `<!-- stack-it:stack start -->` block in `CLAUDE.md`, `docs/stack.md` present, `docs/stack-notes.md` present, the plain-path pointer sentence to `docs/stack-notes.md` inside `docs/stack.md`'s markers, the pointer present in `AGENTS.md`, the bridge present (or a recorded decline, or a symlink exception), and the `format` stamp present when `stack.yaml` exists. A `docs/stack.md` that went missing while `AGENTS.md` still points at it is `migrate`'s to restore as a stub; a `docs/stack-notes.md` missing beside an owned `docs/stack.md` is not a stop either, since `migrate` stubs it and `document-stack` writes it on the next pass. A `docs/stack.md` whose section has lost the pointer sentence is `migrate`'s to fix only when that section is one of its own stubs, which it rewrites whole; a real section missing the sentence is a piece for `document-stack` to put back on its next render, and the report names it rather than editing it. Two things are reported layout exceptions rather than missing pieces, and neither is ever written through: an `AGENTS.md` symlinked outside the project, whose target carries no pointer, and a `CLAUDE.md` symlinked outside the project that still holds the old block. Reading through such a symlink is safe, so a block at the target is still carried; only the cut is skipped, and the report says the block is still sitting there. Content missing from inside either docs file is not part of this check; regenerating that is `document-stack`'s job, never `migrate`'s. A project with no pointer, no bridge, and neither docs file has never been documented: nothing is broken, so a standalone `migrate` is a no-op that points the user at `document-stack`, and `document-stack` carries on and writes them for the first time.
 
-If any piece is genuinely missing, invoke `stack-it:migrate`, which re-runs only the step that produced it, and carry on once it returns; if it reports `stopped:`, stop too and relay the reason. A leftover old block at format 2 is migrate's to carry below the end marker of `docs/stack.md` and then cut, never yours to remove and never anything to fold back into the managed section. A `docs/stack.md` that went missing while `AGENTS.md` still points at it is migrate's to restore as a stub, which you then fill in. Don't re-run a migration step yourself: restructuring is not this skill's job, and the lockfile stamp is not this skill's to write.
+If any piece is genuinely missing, invoke `stack-it:migrate`, which re-runs only the step that produced it, and carry on once it returns; if it reports `stopped:`, stop too and relay the reason. A leftover old block at format 2 is migrate's to carry below the end marker of `docs/stack-notes.md` and then cut, never yours to remove and never anything to fold back into a managed section. Don't re-run a migration step yourself: restructuring is not this skill's job, and the lockfile stamp is not this skill's to write.
 
 ## Step 2: Get the stack (lockfile first, else infer)
 
@@ -51,68 +53,100 @@ If any piece is genuinely missing, invoke `stack-it:migrate`, which re-runs only
 
 From that evidence, name the stack the way the pipeline would: language/runtime, framework(s), key libraries, test/lint/build tooling, database/ORM, and anything else load-bearing, each with the version you found. **Present the inferred stack to the user and confirm it before writing**, calling out anything you're unsure about; inference is a best guess, and the user can correct a wrong call faster than they can un-publish a wrong doc.
 
-Those two sources are the only ones the generated section is built from: the lockfile, or the codebase when there's no lockfile. Whatever the text already in `docs/stack.md` says beyond them is Step 4a's to carry into the tail, not Step 3's to fold back into the render.
+When a lockfile exists it does not displace the codebase; the two divide the work. The lockfile owns which tools are in the stack and which version each one is pinned to, and you never re-derive either from the manifests. The code supplies what the lockfile has no field for: the commands, read off the package scripts and the tooling; the wiring, read off the config files; and the rules, read off what the code and config actually do. With no lockfile the codebase supplies all of it, versions included. Between them that is the whole input. Whatever the text already in the docs files says beyond it is Step 4's to carry into the notes tail, not Step 3's to fold back into the render.
 
-## Step 3: Write for two audiences
+## Step 3: Write for two audiences, across three files
 
-Both documents describe the same stack, but their readers need different things. Write each for its reader rather than pasting one block into both.
+The agent-facing reference is split in two by what each file costs to read. Write each one for what its reader pays.
 
-**`docs/stack.md` (agent-facing).** An agent reading this is about to make a change and needs to act correctly. Give it:
-- Each tool and its **pinned version** and role (one line each).
-- The exact commands to **build, test, lint/format, and run** the dev server or app; an agent shouldn't have to guess the test command.
-- **Conventions** the tools imply that an agent would otherwise get wrong (e.g. "Tailwind v4 is wired via the Vite plugin, no `tailwind.config.js`"; "ESLint uses flat config").
-- **Caveats:** carry over the lockfile's `caveats`, or note inferred gotchas (a known-incompatible pair, a pin that needs a specific peer version).
+**`docs/stack.md`, the tier every agent loads.** It is reached through the `AGENTS.md` pointer, so it is in context from the first token of every session, whether or not anyone needed it. Keep it to what an agent must have in front of it to act correctly:
 
-Keep it concise and factual; this is reference an agent consults, not prose it reads top to bottom.
+- One or two sentences saying what the project is and that `docs/stack-notes.md` holds the why and the wiring.
+- A **Commands** table: build, test, lint, format, dev, run, install, and how to add a dependency, one row each. Write a row only for the tasks this project actually has a command for, taken from its scripts or its tooling. Skip the rest rather than inventing one or writing "not configured", and say in the notes tier which of the eight are absent. An agent shouldn't have to guess the test command, and it shouldn't be handed a build command that doesn't exist.
+- A **Pins** table, two columns, tool and version, under the same group headings the notes file uses. A drifted install gets `x installed, lockfile says y` in the version cell. No third column: the reason a pin is what it is belongs in the notes.
+- **Rules**, one line each, and only things an agent gets wrong without being told: the package manager, a pinned major that must not be bumped, a config file that must keep its extension, a recorded security decision, a runtime trap. At most 15 lines, and only the ones the lockfile and the code actually support. A project with four real rules gets four; padding to reach a count puts guesses in the file every session loads.
 
-**Why the reference lives in its own file.** A root instruction file is loaded at the start of every session, so it should stay short and point at the long-form material instead of carrying it. `AGENTS.md` is the file the ecosystem already reads: Codex, Cursor, Copilot, Gemini CLI, Zed, Amp and Windsurf pick it up natively. Codex caps the combined `AGENTS.md` chain at 32 KiB, so a full stack dump there crowds out the project's real rules, and one pointer line survives that budget. Agents with no import syntax see the literal path and open the file when they need it. Claude Code is the exception: it loads `CLAUDE.md`, not `AGENTS.md`, at session start, so a thin bridge gives it the same content. `CLAUDE.md` imports `@AGENTS.md`, which imports `@docs/stack.md`, two of the four import hops Claude Code allows, and the reference is loaded at launch.
+**`docs/stack-notes.md`, the tier read on demand.** No agent loads this at launch, so it can be as long as the project needs. Per group and per tool: the role, how it's wired (config files, plugins, entry points), the conventions the tool implies, caveats from the lockfile, drift between the lockfile and the installed version, and install provenance where it helps. One tool per row or per bullet, tables or bullets as you prefer. This is also where the notes carried forward from earlier docs end up.
+
+**Why the reference is two files.** Claude Code loads every `@` import in full at session start and re-injects it after each `/compact`; the official docs say imported files "still load and enter the context window at launch" and that splitting a file into `@path` imports "helps organization but doesn't reduce context". Codex caps the combined `AGENTS.md` chain at 32 KiB. So the tier behind the pointer is charged to every session, and on the first real project it came out at 20 KB, roughly 5,000 tokens, most of it a third column of prose nobody reads until they need it. Splitting that file moves the prose to `docs/stack-notes.md` and leaves about 6 KB always loaded. The pointer to the notes file is a **plain path**, never `@` and never a markdown link with `@` in it, because a plain path is not an import: Claude and every other agent read it with file tools when they need it, and nothing loads at launch. `AGENTS.md` is the file the ecosystem already reads (Codex, Cursor, Copilot, Gemini CLI, Zed, Amp and Windsurf pick it up natively), and one pointer line survives its budget. Claude Code is the exception: it loads `CLAUDE.md`, not `AGENTS.md`, at session start, so a thin bridge gives it the same content. `CLAUDE.md` imports `@AGENTS.md`, which imports `@docs/stack.md`, and the small tier is loaded at launch.
 
 **README (human-facing).** A person here wants to understand and run the project. Give them:
-- A **Tech Stack** section: the major choices at a glance, each with a few words on what it's for.
-- A **Getting Started** section: prerequisites (runtime version, package manager), install, run the dev server, run tests, build. Use the real commands for this stack.
+
+- A **Tech stack** section: the major choices at a glance, each with a few words on what it's for.
+- A **Getting started** section: prerequisites (runtime version, package manager), install, run the dev server, run tests, build. Use the real commands for this stack.
 
 If there's no README, create one with these sections.
 
 ## Step 4: Write the files
 
-Run **Marker integrity** on both files whose content you replace, an owned `docs/stack.md` and the README, before the first byte of either is written, if Step 1 didn't already run it on the way past `migrate`. A bad pair in the README stops the run just as a bad pair in `docs/stack.md` does, and checking it late would leave a rewritten `docs/stack.md` next to a README nobody touched.
+Run **Marker integrity** on every file whose content you replace, both owned docs files and the README, before the first byte of any of them is written, if Step 1 didn't already run it on the way past `migrate`. A bad pair in the README stops the run just as a bad pair in `docs/stack.md` does, and checking it late would leave a rewritten docs file next to a README nobody touched.
 
-### (a) Write docs/stack.md
+### (a) Write the two docs files
 
-Write here only when Step 1 established the file is stack-it's: it doesn't exist yet, or it's a regular file whose first line starts with the generated header prefix. A `docs/stack.md` you don't own is never overwritten.
+Write here only when Step 1 established the file is stack-it's: it doesn't exist yet, or it's a regular file whose first line starts with the generated header prefix. A docs file you don't own is never overwritten.
 
-The file has three parts, and only the middle one is yours:
+Each file has three parts, and only the middle one is yours. `docs/stack.md`:
 
 ```
-> Generated by stack-it document-stack, format 2. The section between the markers is regenerated on every run; anything below the end marker is yours and survives.
+> Generated by stack-it document-stack, format 2. The section between the markers is regenerated on every run; anything below the end marker is yours and survives. Rationale, wiring, and carried notes live in docs/stack-notes.md.
 
 <!-- stack-it:stack start -->
-...the agent-facing content from Step 3...
+# Stack
+
+...the one or two sentences, the Commands table, the Pins table, the Rules...
+
+Detail for every pin, the wiring, and the notes carried forward from earlier docs: docs/stack-notes.md. Read it before changing configuration or adding a tool.
 <!-- stack-it:stack end -->
 
 ...anything the user put here stays here...
 ```
 
-Detection reads `format N` off the header line and matches on that prefix alone, so keep the prefix word for word and write the current sentence after it. An older file's sentence is rewritten to this one on the way past. Then take the first case that matches:
+`docs/stack-notes.md`:
+
+```
+> Generated by stack-it document-stack, format 2, notes tier. The section between the markers is regenerated on every run; anything below the end marker is yours and survives.
+
+<!-- stack-it:stack start -->
+# Stack notes
+
+...per group, per tool: role, wiring, conventions, caveats, drift, provenance...
+<!-- stack-it:stack end -->
+
+...anything the user put here stays here, including ## Notes carried forward...
+```
+
+The closing pointer sentence in `docs/stack.md` is the last line inside its markers, and the path in it is plain text. Never write `@docs/stack-notes.md`, never make it a markdown link, and never put it in `AGENTS.md`: the whole point of the split is that this file is not imported.
+
+Detection reads `format N` off each header line and matches on that prefix alone, so keep both prefixes word for word and write the current sentence after each. Then, for each file, take the first case that matches:
 
 - **No file yet.** Create `docs/` if it isn't there and write the header, a blank line, and the generated section inside one marker pair. There's no tail yet.
 - **Ours, with one clean marker pair.** Replace only what's between the markers and rewrite the header line. Everything after the end marker is copied through byte for byte: same text, same blank lines, same trailing newline. So is anything sitting between the header and the start marker.
-- **Ours, with no markers.** A stack-it before 0.5.1 wrote none, so the whole body below the header is the old generated section: run all of it through the carry-forward below, then write the file with one pair around the new section. Nothing in that file marks where the generated text stopped, so a tail somebody added by hand (a `## Team notes` section, say) is carried like everything else rather than guessed at. Say in the report that you added the markers. The format stays 2; this is not a bump.
-- **Ours, with malformed markers.** Marker integrity stops the run: show the offending lines and write nothing, here or in the README.
+- **Ours, with malformed markers, or with no markers at all.** Marker integrity stops the run: show the file and write nothing, in either docs file or the README. Format 2 has always written a pair into both files, so an owned file with no markers is a layout this version does not know how to read, not an older one to upgrade in place.
+
+One header can end up on the wrong file, usually after somebody copied one across. A `docs/stack.md` whose header says `notes tier`, or a `docs/stack-notes.md` whose header doesn't, keeps its content and its tail; say so in the report and rewrite the header line to the tier the filename means. The filename decides which tier a file is, never the header.
+
+#### Keep the loaded tier small
+
+The budget is on `docs/stack.md`, since that is the file every session pays for. Aim to keep the managed section under 6 KB. If the render comes out over 8 KB, move content to the notes tier in this order until it fits: rules past the fifteenth line, then any prose beyond the opening two sentences, then any pin row carrying more than a tool and a version. Say in the report what you moved and why.
+
+Those three moves are the whole toolkit. If the section is still over 8 KB once they are done, write it as it stands and warn: pin rows and command rows are what this file exists for, and a project with 60 real dependencies produces a large file even with nothing padding it. Never get under budget by dropping a fact, a pin, or a command. Everything that has somewhere else to go has already gone there, and the notes file has no budget.
 
 #### Carry forward what the lockfile cannot say
 
-The generated section is a render of the lockfile, or of what you inferred. A lockfile has fields for tools, versions, install steps, caveats, and where the install steps came from, and none for operational notes, so the text already in the section can hold things it cannot express: that a package manager doesn't hoist what you never declared, that the dev server serves stale CSS after a rename, a built-and-pending ledger, a convention someone learned the hard way. Replacing the section takes all of that with it, which is the bug this step exists to prevent.
+The generated sections are a render of the lockfile, or of what you inferred. The lockfile's fields are structured: a tool, a version, install steps, caveats, and a free-form `notes` string. Plenty of what a human wrote into an earlier section fits none of them, or fits only as prose nobody put there: that a package manager doesn't hoist what you never declared, that the dev server serves stale CSS after a rename, a built-and-pending ledger, a convention someone learned the hard way. Replacing a section takes all of that with it, which is the bug this step exists to prevent. What decides whether a line is carried is only whether the new render states it. Which field it might have come from, `caveats` or `notes` or nothing at all, never enters into it.
 
-So once the new section is rendered and before you write it, compare the two and sort every line of the old one:
+So once both new sections are rendered and before you write either, compare them against the old text and sort every line of it:
 
-1. Read the previous generated section. For a file that had no markers, that's the whole body below the header.
-2. Set aside everything the new section already says, however differently it words it: the same tool at the same or a newer version, the same command, the same convention, the same caveat. Set aside the scaffolding too, the headings, the blank lines, the list bullets that carry nothing of their own. None of it moves; the new render is already saying it, and a tail that accumulates `# Stack` and `## Commands` on every run is the failure this step guards against.
-3. Drop three things, and only these three: a version of a tool the lockfile lists, which the new render supersedes; a command the new section restates in this project's own package-manager form (`pytest` against `uv run pytest`, `vitest run` against `pnpm test`); and either line `migrate` writes, `Moved from CLAUDE.md by migrate; run document-stack to regenerate.` and `Placeholder written by migrate; run document-stack to fill this in.`, which are markers rather than content and are neither carried nor kept.
-4. Carry what's left. When a line fits none of the categories above, carry it: that is the default, and the whole point of this step. A tool the lockfile has no slot for is carried and tagged `(not in the lockfile)`. A note that mentions a version the lockfile has since moved past is carried word for word and flagged in the report, never rewritten to match the new pin, because the note may be about the old version on purpose.
-5. Put each carried item below the end marker under a `## Notes carried forward` heading, with one provenance line under the heading and the notes below that. Create the two together when they aren't there. When the heading exists, the first non-blank line under it that starts with `Carried` is the provenance line, whatever its wording (earlier versions wrote different ones, some dated): reuse it as it is, never rewrite it, and add only the new notes, as the last lines of that section, before the next heading. Never write a second heading or a second provenance line, and never add a note the tail already carries, under that heading or anywhere else below the marker.
-6. In the report, give one line per dropped version or command ("old section said FastAPI 0.110.0 and `pytest`; lockfile says 0.115.0 and `uv run pytest`") and one line per carried note, so nothing leaves the file in silence. Say "nothing needed carrying" only when both lists are empty.
-7. Also in the report, name the notes already in the tail that the new section now covers, as prune candidates. The tail is the user's: say what has gone redundant and leave the editing to them.
+1. Read the previous generated text: the union of the old managed sections of `docs/stack.md` and `docs/stack-notes.md`. Right after a `migrate` run that is the carried block sitting in `docs/stack-notes.md`'s section.
+2. Set aside everything either new section already says, however differently it words it: the same tool at the same or a newer version, the same command, the same convention, the same caveat. Set aside the scaffolding too, the headings, the table header rows, the blank lines, the list bullets that carry nothing of their own. None of it moves; the new render is already saying it, and a tail that accumulates `# Stack` and `## Commands` on every run is the failure this step guards against.
+3. Sort by sentence, not by line, and split only at sentence boundaries. A line holding two sentences, one the render states and one it doesn't, contributes only the second. A single sentence that mixes both is carried whole, and the report names its stated part as a prune candidate; splitting inside a sentence produces a fragment nobody can read a year later. Never carry a fragment away from its subject: a table row carries its note cell as a bullet that names the row's subject, so `| Vite | 7.1.0 | Plugin order matters: Tailwind before React. |` carries as `- Vite: plugin order matters, Tailwind before React.`
+4. Drop three things, and only these three: a version of a tool the lockfile lists, which the new render supersedes; a command the new sections restate in this project's own package-manager form (`pytest` against `uv run pytest`, `vitest run` against `pnpm test`); and either line `migrate` writes, `Moved from CLAUDE.md by migrate; run document-stack to regenerate.` and `Placeholder written by migrate; run document-stack to fill this in.`, which are markers rather than content and are neither carried nor kept.
+5. Carry what's left. When a line fits none of the categories above, carry it: that is the default, and the whole point of this step. A tool the lockfile has no slot for is carried and tagged `(not in the lockfile)`. A note that mentions a version the lockfile has since moved past is carried word for word and flagged in the report, never rewritten to match the new pin, because the note may be about the old version on purpose.
+6. Put each carried item in **`docs/stack-notes.md`**, below its end marker, under a `## Notes carried forward` heading, with one provenance line under the heading and the notes below that. Create the two together when they aren't there. When the heading exists, the first non-blank line under it that starts with `Carried` is the provenance line, whatever its wording (earlier versions wrote different ones, some dated): reuse it as it is, never rewrite it, and add only the new notes, as the last lines of that section, before the next heading. Never write a second heading or a second provenance line. Nothing is ever carried into `docs/stack.md`'s tail; the loaded tier stays small.
+   - **Never add a note either tail already carries.** Read both tails before appending, `docs/stack-notes.md`'s and `docs/stack.md`'s. A note a user moved into `docs/stack.md`'s tail is already written down, so carrying a copy into the notes tail duplicates it. Leave it where it is, and say in the report that it sits in the file that loads at every session start and can be moved to the notes tail if they want the bytes back. Never move it yourself: that tail is theirs.
+   - **Stop on an ambiguous tail rather than guessing.** Count the `## Notes carried forward` headings, and the `Carried` lines under them, across the union of both tails: `docs/stack-notes.md`'s and `docs/stack.md`'s. More than one heading across the two files, or a heading with no `Carried` line under it, leaves no single place the new notes belong and no line to reuse. Write nothing to either file, show the user both tails, and ask them to settle it. Guessing puts the provenance line in the wrong position and every later run inherits the mistake.
+7. In the report, give one line per dropped version or command ("old section said FastAPI 0.110.0 and `pytest`; lockfile says 0.115.0 and `uv run pytest`") and one line per carried note, so nothing leaves the files in silence. Say "nothing needed carrying" only when both lists are empty.
+8. Also in the report, name the notes already in the notes tail that the new sections now cover, as prune candidates. The tail is the user's: say what has gone redundant and leave the editing to them.
 
 The provenance line is fixed text shared with `migrate`, which writes the same line when it appends a leftover block, so whichever skill created the heading, the other reuses it. Reuse is by position, the first `Carried` line under the heading, so a line written by an earlier version is reused too:
 
@@ -122,7 +156,7 @@ Carried forward by stack-it. Each line says something the generated section abov
 
 Dating it or rewording it per run would put a differently worded line in that position on every carry; write it verbatim.
 
-Run this against a section you just regenerated yourself and every line lands in step 2, which is why a second run in a row carries nothing.
+Run this against sections you just regenerated yourself and every line lands in step 2, which is why a second run in a row carries nothing.
 
 Text `migrate` carried over is never dropped in silence. The first regeneration after a placeholder is the run where the user finally sees that list and decides what to keep, so show it to them even when it's long.
 
@@ -142,7 +176,7 @@ Before the pointer step and the bridge step, resolve `AGENTS.md` and `CLAUDE.md`
 Before adding a dependency or running the build, test, or lint toolchain, read the stack reference: @docs/stack.md
 ```
 
-This is a presence check, not a managed block. If `AGENTS.md` already contains `@docs/stack.md` outside backticks, do nothing, even if the sentence around it has been reworded; the pointer is there and the wording is the user's. Otherwise append the line, creating `AGENTS.md` if it's missing and putting a blank line before it if the file already has content. Never add markers to `AGENTS.md`, and never wrap the path in backticks or a code fence: a backticked path isn't an import, so Claude Code would skip it.
+This is a presence check, not a managed block. If `AGENTS.md` already contains `@docs/stack.md` outside backticks, do nothing, even if the sentence around it has been reworded; the pointer is there and the wording is the user's. Otherwise append the line, creating `AGENTS.md` if it's missing and putting a blank line before it if the file already has content. Never add markers to `AGENTS.md`, never wrap the path in backticks or a code fence (a backticked path isn't an import, so Claude Code would skip it), and never add a second line for `docs/stack-notes.md`.
 
 ### (d) Ensure the CLAUDE.md bridge
 
@@ -163,17 +197,21 @@ Claude Code loads `CLAUDE.md`, not `AGENTS.md`, at session start, so it needs a 
 <!-- stack-it:stack start -->
 > Generated by stack-it's document-stack. Edits inside this block are overwritten on the next run.
 
-...generated Tech Stack + Getting Started...
+...generated Tech stack + Getting started...
 <!-- stack-it:stack end -->
 ```
 
-Apply **Marker integrity** from Step 1 to the README before you replace anything in it. The rule is the same one that governs `docs/stack.md` and the old CLAUDE.md block.
+Apply **Marker integrity** from Step 1 to the README before you replace anything in it. The rule is the same one that governs the two docs files and the old CLAUDE.md block.
 
-On each run: if the pair already exists in the README, replace only the content between them; if neither marker is there, insert the block after the title and intro, before the deeper sections. Everything outside the markers stays exactly as the user left it, and there's exactly one marker pair, never a second block appended. `docs/stack.md` gets its own pair (Step 4a); the two pointer files get presence-checked lines and never any markers.
+On each run: if the pair already exists in the README, replace only the content between them; if neither marker is there, insert the block after the title and intro, before the deeper sections. Everything outside the markers stays exactly as the user left it, and there's exactly one marker pair, never a second block appended. Each docs file gets its own pair (Step 4a); the two pointer files get presence-checked lines and never any markers.
 
 ## Step 5: Report
 
-Tell the user what you did: which source you used (lockfile or inferred-from-code, and if inferred, that they confirmed it), whether `migrate` ran and what it moved, and every file you wrote or created, one line each. That's `docs/stack.md` (created, its generated section replaced, or regenerated whole with the markers added), `AGENTS.md` (created, pointer appended, or already pointing), `CLAUDE.md` (created as a bridge, left alone, or the declined-import fallback), and the README (block refreshed or inserted). List the notes you moved under `## Notes carried forward` and the versions and commands the new section superseded, one line each, and say nothing needed carrying only when both lists are empty. Name any note already in the tail that the new section now covers, as a prune candidate: the tail is the user's, so you say what has gone redundant and they decide. Surface any discrepancy or caveat you found. If you inferred the stack, remind them the result is only as accurate as the codebase signals and they should correct anything you got wrong.
+Tell the user what you did: which source you used (lockfile or inferred-from-code, and if inferred, that they confirmed it), whether `migrate` ran and what it moved, and every file you wrote or created, one line each. That's `docs/stack.md` and `docs/stack-notes.md` (each created or its generated section replaced, plus any header line you corrected to match the file's tier), `AGENTS.md` (created, pointer appended, or already pointing), `CLAUDE.md` (created as a bridge, left alone, or the declined-import fallback), and the README (block refreshed or inserted).
+
+Give the sizes, since the whole layout exists to hold one of them down: the byte size of each docs file's managed section and of each tail, and then `docs/stack.md`'s whole-file size, section plus tail, labelled "loads at session start". The tail is loaded along with the section, so the number that matters to a session is the file, not the managed part of it. Warn plainly when that whole-file number goes over 8 KB, say what you moved to the notes tier, and, if it is still over after the three moves, say that too and that you left it rather than dropping pins or commands.
+
+List the notes you moved under `## Notes carried forward` and the versions and commands the new sections superseded, one line each, and say nothing needed carrying only when both lists are empty. Name any note already in the notes tail that the new sections now cover, as a prune candidate: the tail is the user's, so you say what has gone redundant and they decide. Surface any discrepancy or caveat you found. If you inferred the stack, remind them the result is only as accurate as the codebase signals and they should correct anything you got wrong.
 
 ## Boundaries
 

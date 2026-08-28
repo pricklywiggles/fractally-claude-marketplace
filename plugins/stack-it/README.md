@@ -33,7 +33,7 @@ Each stage is usable on its own; `setup-stack` is for taking the whole journey i
 ...your own notes, kept byte for byte...
 ```
 
-The first line is how stack-it tells its own file from a hand-written one and reads the layout `format` off it; detection matches the prefix, since the sentence after it changes between versions. `document-stack` replaces what's between the markers on every run and copies the tail through untouched. The lockfile has fields for tools, versions, install steps, caveats, and the provenance of the install steps, and none for operational notes, so anything the old section said that the new one can't (a package-manager gotcha, a ledger, a note about the dev server) is moved below the end marker under `## Notes carried forward` and listed in the report. A regeneration never eats what somebody typed by hand.
+The first line is how stack-it tells its own file from a hand-written one and reads the layout `format` off it; detection matches the prefix, since the sentence after it changes between versions. `document-stack` replaces what's between the markers on every run and copies the tail through untouched. The lockfile has fields for tools, versions, install steps, caveats, and the provenance of the install steps, and none for operational notes, so anything the old section said that the new one can't (a package-manager gotcha, a ledger, a note about the dev server) is moved below the end marker under `## Notes carried forward`, under one fixed provenance line, and listed in the report along with anything in that tail the new section has grown to cover. A regeneration never eats what somebody typed by hand.
 
 ## Utility skills
 

@@ -26,3 +26,9 @@
 
 None recorded.
 <!-- stack-it:stack end -->
+
+## Notes carried forward
+
+Carried forward by stack-it. Each line says something the generated section above did not; prune what the section grows to cover.
+
+- Tests need `DATABASE_URL` unset so they hit the local SQLite file, not the shared dev database.

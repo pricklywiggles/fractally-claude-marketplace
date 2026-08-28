@@ -35,13 +35,13 @@ A format number says which layout the project uses, not that every piece of it l
 
 Re-run only the step that produced the missing piece, and report which one you had to redo. A `docs/stack.md` missing while the pointer still points at it means the stub from write step 2, so the pointer resolves again; filling it in stays `document-stack`'s job. An owned `docs/stack.md` that is already there is never rewritten.
 
-A leftover block is the one repair with a twist. `docs/stack.md` already exists and its managed section belongs to `document-stack`, so the block's text never goes inside the markers. Append it below the end marker instead, under a `## Notes carried forward` heading, with one provenance line above the carried text:
+A leftover block is the one repair with a twist. `docs/stack.md` already exists and its managed section belongs to `document-stack`, so the block's text never goes inside the markers. Append it below the end marker instead, under a `## Notes carried forward` heading, with one provenance line above the carried text. It is the same line `document-stack` writes, so whichever skill created the heading, the other reuses it:
 
 ```
-Carried from a CLAUDE.md block found after migration; prune what the section already covers.
+Carried forward by stack-it. Each line says something the generated section above did not; prune what the section grows to cover.
 ```
 
-Same hygiene as write step 2: the block's own banner dropped, its headings promoted one level, no old markers inside. If the tail already carries a `## Notes carried forward` heading, reuse it rather than adding a second, and skip any line of the block already sitting below the end marker, under the rule `document-stack` follows: never add a note the tail already carries. That makes a repeated repair, after a run that failed between the append and the cut, land on the same file it would have produced the first time.
+Same hygiene as write step 2: the block's own banner dropped, its headings promoted one level, no old markers inside. Before appending, set aside every block line the generated section already states (the same tool at the same or a newer version, the same command), under the same rule `document-stack` uses, so the provenance line stays true. If the tail already carries a `## Notes carried forward` heading, reuse it and the first `Carried` line under it, whatever its wording, rather than adding a second of either, and skip any line of the block already sitting below the end marker: never add a note the tail already carries. That makes a repeated repair, after a run that failed between the append and the cut, land on the same file it would have produced the first time.
 
 Then cut the block from `CLAUDE.md`, destination before source as always, and list what you carried in the report. When `CLAUDE.md` is a symlink outside the project, the append still happens and only the cut is skipped, exactly as in the 1 → 2 hop; say in the report that the block is still at the target.
 

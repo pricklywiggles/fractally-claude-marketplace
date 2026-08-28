@@ -4,3 +4,6 @@
 # sisyphus
 .sisyphus/
 tmp
+# Claude Code: personal overrides and worktrees stay local
+.claude/settings.local.json
+.claude/worktrees/

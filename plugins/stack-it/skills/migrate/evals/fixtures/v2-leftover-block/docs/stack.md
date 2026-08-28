@@ -21,14 +21,8 @@
 ## Conventions
 
 - Tests live in `tests/` and import the app as `app.main`.
-- The SQLite file is created on startup by the lifespan handler; there is no migration step.
 
 ## Caveats
 
 None recorded.
 <!-- stack-it:stack end -->
-
-## Team notes
-
-- The SQLite file is gitignored; delete it if a schema change breaks startup.
-- Ping @platform-team before bumping FastAPI; the staging box pins the ASGI server.

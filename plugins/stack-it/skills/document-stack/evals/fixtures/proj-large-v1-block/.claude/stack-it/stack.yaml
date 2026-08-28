@@ -1,0 +1,230 @@
+project:
+  description: Marketing site and self-serve checkout for the Meridian product
+  type: web-app
+  platforms: [browser, vercel]
+stack:
+  - slot: language/runtime
+    choice: Node.js
+    version: 22.14.0
+    install:
+      - node is already installed; verify with `node --version`
+    caveats:
+      - The build box pins 22.14.0; a local Node on a different major resolves different transitive deps.
+    notes: The pin is mirrored in .nvmrc.
+  - slot: package manager
+    choice: pnpm
+    version: 10.4.1
+    install:
+      - corepack enable pnpm
+      - pnpm --version
+    caveats:
+      - pnpm does not hoist; an undeclared transitive import resolves locally and fails on the build box.
+    notes: null
+  - slot: language
+    choice: TypeScript
+    version: 5.7.3
+    install:
+      - provided by the Next.js template
+    caveats: []
+    notes: strict plus noUncheckedIndexedAccess; the @/* path alias is set in tsconfig.json.
+  - slot: web framework
+    choice: Next.js
+    version: 15.2.0
+    install:
+      - pnpm create next-app@15.2.0 . --ts --app --tailwind --eslint
+    caveats:
+      - App Router only; the Pages Router is not wired up.
+      - typedRoutes is on, so an href that matches no route fails the build.
+    notes: https://nextjs.org/docs/app/getting-started/installation
+  - slot: UI library
+    choice: React
+    version: 19.0.0
+    install:
+      - provided by the Next.js template; verify it resolves to 19.x
+    caveats:
+      - Server Components are the default; "use client" placed too high in the tree bloats the client bundle.
+    notes: null
+  - slot: CSS framework
+    choice: Tailwind CSS
+    version: 4.0.9
+    install:
+      - provided by the Next.js template with the --tailwind flag
+    caveats:
+      - Tailwind v4 is wired through the PostCSS plugin; there is no tailwind.config.js and theme tokens live in app/globals.css.
+    notes: https://tailwindcss.com/docs/installation/framework-guides/nextjs
+  - slot: component primitives
+    choice: Radix UI
+    version: 1.1.2
+    install:
+      - pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-tooltip
+    caveats: []
+    notes: Wrapped in components/ui/; pages import the wrappers, never the primitives.
+  - slot: content rendering
+    choice: next-mdx-remote
+    version: 5.0.0
+    install:
+      - pnpm add next-mdx-remote gray-matter
+    caveats: []
+    notes: Frontmatter is validated by the Zod schema in lib/content.ts.
+  - slot: variant styling
+    choice: class-variance-authority
+    version: 0.7.1
+    install:
+      - pnpm add class-variance-authority
+    caveats: []
+    notes: null
+  - slot: icons
+    choice: lucide-react
+    version: 0.475.0
+    install:
+      - pnpm add lucide-react
+    caveats: []
+    notes: Namespace imports are banned by the ESLint config.
+  - slot: database
+    choice: PostgreSQL
+    version: "16.4"
+    install:
+      - provision a Neon project and copy DATABASE_URL into .env.local
+    caveats:
+      - Neon in every environment, local included; there is no docker-compose Postgres.
+    notes: null
+  - slot: ORM
+    choice: Drizzle ORM
+    version: 0.39.3
+    install:
+      - pnpm add drizzle-orm
+      - pnpm add -D drizzle-kit
+    caveats:
+      - Generated migrations under db/migrations/ are never edited by hand.
+    notes: Schema lives in db/schema.ts.
+  - slot: database driver
+    choice: "@neondatabase/serverless"
+    version: 0.10.4
+    install:
+      - pnpm add @neondatabase/serverless
+    caveats:
+      - The HTTP driver has no cross-statement transactions; db.transaction() emulates them in one round trip.
+    notes: null
+  - slot: validation
+    choice: Zod
+    version: 3.24.1
+    install:
+      - pnpm add zod
+    caveats:
+      - Pinned to 3.x on purpose; v4 changes the error shape the form layer reads.
+    notes: null
+  - slot: authentication
+    choice: Auth.js
+    version: 5.0.0-beta.25
+    install:
+      - pnpm add next-auth@5.0.0-beta.25
+    caveats:
+      - Exact pin, never widened; beta releases change the session callback signature.
+    notes: v5 is the only line with App Router support.
+  - slot: payments
+    choice: Stripe
+    version: 17.6.0
+    install:
+      - pnpm add stripe
+    caveats:
+      - The webhook route must stay on the nodejs runtime; the edge runtime breaks signature verification.
+    notes: Webhook lives at app/api/stripe/route.ts.
+  - slot: transactional email
+    choice: Resend
+    version: 4.1.2
+    install:
+      - pnpm add resend @react-email/render
+    caveats: []
+    notes: Templates are React components under emails/.
+  - slot: date handling
+    choice: date-fns
+    version: 4.1.0
+    install:
+      - pnpm add date-fns date-fns-tz
+    caveats:
+      - Dates are stored as timestamptz; format with formatInTimeZone rather than constructing a Date from a string.
+    notes: null
+  - slot: deploy tooling
+    choice: Vercel CLI
+    version: 41.1.0
+    install:
+      - pnpm add -D vercel
+    caveats: []
+    notes: Used for `vercel env pull`; deploys come from git.
+  - slot: open graph images
+    choice: "@vercel/og"
+    version: 0.6.5
+    install:
+      - pnpm add @vercel/og
+    caveats:
+      - Fonts must be fetched as an ArrayBuffer inside the handler; a static font import does not survive the edge bundle.
+    notes: Generated from app/og/route.tsx.
+  - slot: test framework
+    choice: Vitest
+    version: 3.0.7
+    install:
+      - pnpm add -D vitest jsdom
+    caveats:
+      - Component tests need the jsdom environment; the default node environment has no document.
+    notes: https://vitest.dev/guide/environment
+  - slot: component testing
+    choice: Testing Library
+    version: 16.2.0
+    install:
+      - pnpm add -D @testing-library/react @testing-library/jest-dom @testing-library/user-event
+    caveats: []
+    notes: Queries go by role and label, not test id.
+  - slot: end-to-end testing
+    choice: Playwright
+    version: 1.50.1
+    install:
+      - pnpm add -D "@playwright/test"
+      - pnpm exec playwright install --with-deps chromium
+    caveats:
+      - Browsers are not installed by pnpm install; CI installs Chromium as its own step.
+    notes: null
+  - slot: linter
+    choice: ESLint
+    version: 9.21.0
+    install:
+      - provided and configured by the Next.js template; verify `pnpm lint` runs
+    caveats:
+      - Flat config in eslint.config.mjs; an .eslintrc file is ignored.
+    notes: null
+  - slot: formatter
+    choice: Prettier
+    version: 3.5.1
+    install:
+      - pnpm add -D prettier eslint-config-prettier
+    caveats: []
+    notes: eslint-config-prettier turns off the overlapping ESLint rules.
+  - slot: git hooks
+    choice: husky
+    version: 9.1.7
+    install:
+      - pnpm add -D husky
+      - pnpm exec husky init
+    caveats: []
+    notes: The pre-commit hook runs lint-staged.
+  - slot: staged-file runner
+    choice: lint-staged
+    version: 15.4.3
+    install:
+      - pnpm add -D lint-staged
+    caveats: []
+    notes: null
+  - slot: error monitoring
+    choice: Sentry
+    version: 9.1.0
+    install:
+      - pnpm add @sentry/nextjs
+    caveats:
+      - Source map upload during `pnpm build` needs SENTRY_AUTH_TOKEN; without it the build still passes.
+    notes: Client, server, and edge configs sit at the repo root.
+  - slot: product analytics
+    choice: Vercel Analytics
+    version: 1.5.0
+    install:
+      - pnpm add @vercel/analytics
+    caveats: []
+    notes: Mounted once in app/layout.tsx.
